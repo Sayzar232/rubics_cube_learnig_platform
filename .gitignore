@@ -1,0 +1,60 @@
+# Environment
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+svg/
+
+# Databases
+*.sqlite3
+*.db
+postgres_data/
+
+# Node / frontend
+node_modules/
+frontend/node_modules/
+design/node_modules/
+frontend/dist/assets/algorithms
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+frontend/public/assets/algorithms/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.agents
+
+# Local generated outputs
+response.html
+*.log
+
+# Other
+порядок.txt
+what_have_to_do.txt
+prompt.txt
