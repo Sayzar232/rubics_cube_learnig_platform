@@ -207,7 +207,7 @@ onMounted(async () => {
             <div v-else-if="!currentAlgorithm" class="empty"><h1>Все алгоритмы изучены! 🎉</h1><p>Отличная работа — загляните в каталог для повторения.</p><a href="#/algorithms" class="button">Каталог алгоритмов</a></div>
             <AlgorithmDetail v-else :algorithm="currentAlgorithm" :stats="stats" :loading="loading" @complete="markLearned" @next="openLearning" @catalog="navigate('/algorithms')" />
           </section>
-          <section v-else-if="page === 'algorithms'" class="page-container"><div class="page-heading"><div><h1>Алгоритмы</h1><p>Выбери случай и изучай его в удобном темпе.</p></div><button class="button" @click="openLearning">Продолжить обучение →</button></div><div class="catalog-controls"><div class="segmented"><button :class="{active: filter === 'OLL'}" @click="filter = 'OLL'">OLL</button><button :class="{active: filter === 'PLL'}" @click="filter = 'PLL'">PLL</button></div><input v-model="search" placeholder="Поиск алгоритма…" /></div><div v-if="loading" class="empty">Загрузка…</div><div v-else class="algorithm-grid"><button v-for="algorithm in filteredAlgorithms" :key="algorithm.id" class="algorithm-card" :class="algorithm.category.toLowerCase()" @click="navigate(`/algorithms/${algorithm.id}`)"><span class="learned-mark" :class="{learned: algorithm.is_learned}">{{ algorithm.is_learned ? '✓ Изучен' : `${algorithm.category} #${algorithm.algorithm_number}` }}</span><img :src="algorithm.image_url" :alt="algorithm.name" /><h3>{{ algorithm.name }}</h3><code>{{ algorithm.formula }}</code></button></div><div v-if="!loading && !filteredAlgorithms.length" class="empty">Алгоритмы не найдены.</div></section>
+          <section v-else-if="page === 'algorithms'" class="page-container"><div class="page-heading"><div><h1>Алгоритмы</h1><p>Выбери случай и изучай его в удобном темпе.</p></div><button class="button" @click="openLearning">Продолжить обучение →</button></div><div class="catalog-controls"><div class="segmented"><button :class="{active: filter === 'OLL'}" @click="filter = 'OLL'">OLL</button><button :class="{active: filter === 'PLL'}" @click="filter = 'PLL'">PLL</button></div><input v-model="search" placeholder="Поиск алгоритма…" /></div><div v-if="loading" class="empty">Загрузка…</div><div v-else class="algorithm-grid"><button v-for="algorithm in filteredAlgorithms" :key="algorithm.id" class="algorithm-card" :class="algorithm.category.toLowerCase()" @click="navigate(`/algorithms/${algorithm.id}`)"><span class="learned-mark" :class="{learned: algorithm.is_learned}">{{ algorithm.is_learned ? '✓ Изучен' : `${algorithm.category} #${algorithm.algorithm_number}` }}</span><CubeDiagram :algorithm="algorithm"/><h3>{{ algorithm.name }}</h3><code>{{ algorithm.formula }}</code></button></div><div v-if="!loading && !filteredAlgorithms.length" class="empty">Алгоритмы не найдены.</div></section>
           <section v-else-if="page === 'detail'" class="page-container"><div v-if="loading" class="empty">Загрузка…</div><AlgorithmDetail v-else-if="currentAlgorithm" :algorithm="currentAlgorithm" :stats="stats" :loading="loading" @complete="markLearned" @next="openLearning" @catalog="navigate('/algorithms')" /><div v-else class="empty">Алгоритм не найден.</div></section>
           <section v-else-if="page === 'profile'" class="page-container profile profile-design">
             <div class="profile-card design-profile-card">
@@ -244,6 +244,43 @@ onMounted(async () => {
 </template>
 
 <script>
+import situations from './situations.json'
+
+const STICKER_COLORS = Object.freeze({
+  Y: '#FFFF00',
+  N: '#8D8D8D',
+  G: '#11AA00',
+  R: '#D00000',
+  B: '#2040D0',
+  O: '#EE8800',
+})
+
+const CubeDiagram = {
+  props: ['algorithm'],
+  computed: {
+    state() {
+      const number = String(this.algorithm.algorithm_number).padStart(2, '0')
+      return situations[`${this.algorithm.category.toLowerCase()}-${number}`]
+    },
+  },
+  methods: {
+    color(value) { return STICKER_COLORS[value] || STICKER_COLORS.N },
+    column(index) { return 106 + (index % 3) * 136 },
+    row(index) { return 86 + Math.floor(index / 3) * 136 },
+    sideRow(index) { return 86 + index * 136 },
+  },
+  template: `<svg v-if="state" class="cube-diagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 637 563" role="img" :aria-label="algorithm.name">
+    <rect x="99" y="21" width="409" height="59" fill="#000"/>
+    <rect x="41" y="79" width="525" height="409" fill="#000"/>
+    <rect x="99" y="488" width="409" height="59" fill="#000"/>
+    <rect v-for="(value, index) in state.U" :key="'u' + index" :x="column(index)" :y="row(index)" width="123" height="123" rx="16" ry="16" :fill="color(value)"/>
+    <rect v-for="(value, index) in state.B" :key="'b' + index" :x="column(index)" y="28" width="123" height="45" rx="8" ry="8" :fill="color(value)"/>
+    <rect v-for="(value, index) in state.F" :key="'f' + index" :x="column(index)" y="494" width="123" height="45" rx="8" ry="8" :fill="color(value)"/>
+    <rect v-for="(value, index) in state.L" :key="'l' + index" x="48" :y="sideRow(index)" width="45" height="123" rx="8" ry="8" :fill="color(value)"/>
+    <rect v-for="(value, index) in state.R" :key="'r' + index" x="514" :y="sideRow(index)" width="45" height="123" rx="8" ry="8" :fill="color(value)"/>
+  </svg>`,
+}
+
 const ProgressBar = {
   props: ['label', 'done', 'total', 'color'],
   computed: { percentage() { return this.total ? (this.done / this.total) * 100 : 0 } },
@@ -251,12 +288,12 @@ const ProgressBar = {
 }
 
 const AlgorithmDetail = {
-  components: { ProgressBar },
+  components: { ProgressBar, CubeDiagram },
   props: ['algorithm', 'stats', 'loading'],
   emits: ['complete', 'next', 'catalog'],
   computed: { isOll() { return this.algorithm.category === 'OLL' } },
-  template: `<div class="detail"><div class="detail-heading"><div><button class="back-link" @click="$emit('catalog')">← К каталогу</button><h1>{{ algorithm.category }} #{{ algorithm.algorithm_number }} — {{ algorithm.name }}</h1><p>{{ stats.learned_total }} из {{ stats.total_algorithms }} изучено</p></div><button class="button button--dark" @click="$emit('next')">Следующий →</button></div><div class="detail-progress"><i :style="{ width: stats.overall_percentage + '%' }"/></div><div class="detail-grid"><section><div class="diagram-card" :class="isOll ? 'oll' : 'pll'"><img :src="algorithm.image_url" :alt="algorithm.name"/><span>{{ algorithm.category }} · вид сверху</span></div><div class="formula-card"><small>АЛГОРИТМ</small><div><code v-for="(move, index) in algorithm.formula.split(' ')" :key="index">{{ move }}</code></div><button v-if="!algorithm.is_learned" class="master-button" :disabled="loading" @click="$emit('complete')">{{ loading ? 'Сохраняем…' : '✓ Отметить как выученный' }}</button><p v-else class="mastered">✓ Алгоритм изучен</p></div></section><section><div class="video-card"><a v-if="algorithm.video_url" :href="algorithm.video_url" target="_blank" rel="noreferrer" class="video-link"><span>▶</span><b>{{ algorithm.name }} — видеоурок</b><small>Открыть видео</small></a><div v-else class="video-placeholder"><span>▶</span><b>{{ algorithm.name }} — видеоурок</b><small>Видео будет добавлено позже</small></div></div><div class="tips"><h2>💡 Советы по запоминанию</h2><p>🎯 Разбей алгоритм на блоки по 3–4 хода.</p><p>🔁 Повтори 10 раз медленно, затем ускоряйся.</p><p>👁️ Запомни визуальный паттерн случая.</p></div></section></div></div>`,
+  template: `<div class="detail"><div class="detail-heading"><div><button class="back-link" @click="$emit('catalog')">← К каталогу</button><h1>{{ algorithm.category }} #{{ algorithm.algorithm_number }} — {{ algorithm.name }}</h1><p>{{ stats.learned_total }} из {{ stats.total_algorithms }} изучено</p></div><button class="button button--dark" @click="$emit('next')">Следующий →</button></div><div class="detail-progress"><i :style="{ width: stats.overall_percentage + '%' }"/></div><div class="detail-grid"><section><div class="diagram-card" :class="isOll ? 'oll' : 'pll'"><CubeDiagram :algorithm="algorithm"/><span>{{ algorithm.category }} · вид сверху</span></div><div class="formula-card"><small>АЛГОРИТМ</small><div><code v-for="(move, index) in algorithm.formula.split(' ')" :key="index">{{ move }}</code></div><button v-if="!algorithm.is_learned" class="master-button" :disabled="loading" @click="$emit('complete')">{{ loading ? 'Сохраняем…' : '✓ Отметить как выученный' }}</button><p v-else class="mastered">✓ Алгоритм изучен</p></div></section><section><div class="video-card"><a v-if="algorithm.video_url" :href="algorithm.video_url" target="_blank" rel="noreferrer" class="video-link"><span>▶</span><b>{{ algorithm.name }} — видеоурок</b><small>Открыть видео</small></a><div v-else class="video-placeholder"><span>▶</span><b>{{ algorithm.name }} — видеоурок</b><small>Видео будет добавлено позже</small></div></div><div class="tips"><h2>💡 Советы по запоминанию</h2><p>🎯 Разбей алгоритм на блоки по 3–4 хода.</p><p>🔁 Повтори 10 раз медленно, затем ускоряйся.</p><p>👁️ Запомни визуальный паттерн случая.</p></div></section></div></div>`,
 }
 
-export default { components: { AlgorithmDetail, ProgressBar } }
+export default { components: { AlgorithmDetail, CubeDiagram, ProgressBar } }
 </script>

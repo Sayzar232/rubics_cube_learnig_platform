@@ -88,7 +88,6 @@ function generateSvg(state, filename) {
   const rows = [0, 1, 2].map((index) => FACE_Y + index * (CELL + GAP));
   const elements = [
     // Background and the black cross-shaped frame behind the stickers.
-    rect(0, 0, SVG_WIDTH, SVG_HEIGHT, COLORS.BACKGROUND),
     rect(99, 21, 409, 59, COLORS.FRAME),
     rect(41, 79, 525, 409, COLORS.FRAME),
     rect(99, 488, 409, 59, COLORS.FRAME),

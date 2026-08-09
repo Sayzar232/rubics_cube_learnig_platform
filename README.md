@@ -26,19 +26,6 @@ npm run dev
 
 По умолчанию API ходит в `/api`, а `vite.config.js` проксирует это на `http://localhost:8000`.
 
-## SVG алгоритмов
-
-Парсер теперь складывает SVG в:
-
-```text
-frontend/public/assets/algorithms
-```
-
-Это дает две вещи:
-
-- в dev-режиме Vite сразу раздает SVG из `public`
-- при `npm run build` SVG автоматически попадут в `frontend/dist/assets/algorithms`
-
 ## Сборка для FastAPI
 
 ```bash
