@@ -186,7 +186,7 @@ onMounted(async () => {
     </template>
 
     <section v-else-if="page === 'auth'" class="auth-page">
-      <div class="auth-card"><aside class="auth-aside"><a class="brand"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a><div><h1>Стань мастером кубика Рубика</h1><p>Изучай OLL и PLL алгоритмы с профессиональными диаграммами и видеоуроками.</p></div><div class="tiny-cube"><i v-for="n in 9" :key="n"/></div></aside>
+      <div class="auth-card"><aside class="auth-aside"><a class="brand"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a><div><h1>Стань мастером кубика Рубика</h1><p>Изучай OLL и PLL алгоритмы с профессиональными диаграммами и видеоуроками.</p></div></aside>
         <form class="auth-form" @submit.prevent="submitAuth"><div class="auth-tabs"><button type="button" :class="{active: authMode === 'login'}" @click="authMode = 'login'">Войти</button><button type="button" :class="{active: authMode === 'register'}" @click="authMode = 'register'">Регистрация</button></div><h2>{{ authMode === 'login' ? 'С возвращением!' : 'Создать аккаунт' }}</h2>
           <label v-if="authMode === 'register'">Имя пользователя<input v-model.trim="auth.username" minlength="3" maxlength="50" required placeholder="Alex Petrov" /></label>
           <label>Email<input v-model.trim="auth.email" type="email" required placeholder="alex@example.com" /></label>
@@ -291,8 +291,33 @@ const AlgorithmDetail = {
   components: { ProgressBar, CubeDiagram },
   props: ['algorithm', 'stats', 'loading'],
   emits: ['complete', 'next', 'catalog'],
-  computed: { isOll() { return this.algorithm.category === 'OLL' } },
-  template: `<div class="detail"><div class="detail-heading"><div><button class="back-link" @click="$emit('catalog')">← К каталогу</button><h1>{{ algorithm.category }} #{{ algorithm.algorithm_number }} — {{ algorithm.name }}</h1><p>{{ stats.learned_total }} из {{ stats.total_algorithms }} изучено</p></div><button class="button button--dark" @click="$emit('next')">Следующий →</button></div><div class="detail-progress"><i :style="{ width: stats.overall_percentage + '%' }"/></div><div class="detail-grid"><section><div class="diagram-card" :class="isOll ? 'oll' : 'pll'"><CubeDiagram :algorithm="algorithm"/><span>{{ algorithm.category }} · вид сверху</span></div><div class="formula-card"><small>АЛГОРИТМ</small><div><code v-for="(move, index) in algorithm.formula.split(' ')" :key="index">{{ move }}</code></div><button v-if="!algorithm.is_learned" class="master-button" :disabled="loading" @click="$emit('complete')">{{ loading ? 'Сохраняем…' : '✓ Отметить как выученный' }}</button><p v-else class="mastered">✓ Алгоритм изучен</p></div></section><section><div class="video-card"><a v-if="algorithm.video_url" :href="algorithm.video_url" target="_blank" rel="noreferrer" class="video-link"><span>▶</span><b>{{ algorithm.name }} — видеоурок</b><small>Открыть видео</small></a><div v-else class="video-placeholder"><span>▶</span><b>{{ algorithm.name }} — видеоурок</b><small>Видео будет добавлено позже</small></div></div><div class="tips"><h2>💡 Советы по запоминанию</h2><p>🎯 Разбей алгоритм на блоки по 3–4 хода.</p><p>🔁 Повтори 10 раз медленно, затем ускоряйся.</p><p>👁️ Запомни визуальный паттерн случая.</p></div></section></div></div>`,
+  computed: {
+    isOll() { return this.algorithm.category === 'OLL' },
+    embedUrl() {
+      const videoUrl = this.algorithm?.video_url
+      if (!videoUrl) return null
+
+      try {
+        const url = new URL(videoUrl)
+        const host = url.hostname.replace(/^www\./, '').toLowerCase()
+        const pathParts = url.pathname.split('/').filter(Boolean)
+        let videoId = null
+
+        if (host === 'youtu.be') videoId = pathParts[0]
+        else if (host === 'youtube.com' || host.endsWith('.youtube.com')) {
+          if (pathParts[0] === 'watch') videoId = url.searchParams.get('v')
+          else if (['embed', 'shorts', 'live'].includes(pathParts[0])) videoId = pathParts[1]
+        }
+
+        return /^[\w-]{11}$/.test(videoId || '')
+          ? `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`
+          : null
+      } catch {
+        return null
+      }
+    },
+  },
+  template: `<div class="detail"><div class="detail-heading"><div><button class="back-link" @click="$emit('catalog')">← К каталогу</button><h1>{{ algorithm.category }} #{{ algorithm.algorithm_number }} — {{ algorithm.name }}</h1><p>{{ stats.learned_total }} из {{ stats.total_algorithms }} изучено</p></div><button class="button button--dark" @click="$emit('next')">Следующий →</button></div><div class="detail-progress"><i :style="{ width: stats.overall_percentage + '%' }"/></div><div class="detail-grid"><section><div class="diagram-card" :class="isOll ? 'oll' : 'pll'"><CubeDiagram :algorithm="algorithm"/><span>{{ algorithm.category }} · вид сверху</span></div><div class="formula-card"><small>АЛГОРИТМ</small><div><code v-for="(move, index) in algorithm.formula.split(' ')" :key="index">{{ move }}</code></div><button v-if="!algorithm.is_learned" class="master-button" :disabled="loading" @click="$emit('complete')">{{ loading ? 'Сохраняем…' : '✓ Отметить как выученный' }}</button><p v-else class="mastered">✓ Алгоритм изучен</p></div></section><section><div class="video-card"><iframe v-if="embedUrl" class="video-player" :src="embedUrl" :title="algorithm.name + ' — видеоурок'" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"/><a v-else-if="algorithm.video_url" :href="algorithm.video_url" target="_blank" rel="noreferrer" class="video-link"><span>▶</span><b>{{ algorithm.name }} — видеоурок</b><small>Открыть видео</small></a><div v-else class="video-placeholder"><span>▶</span><b>{{ algorithm.name }} — видеоурок</b><small>Видео будет добавлено позже</small></div></div><div class="tips"><h2>💡 Советы по запоминанию</h2><p>🎯 Разбей алгоритм на блоки по 3–4 хода.</p><p>🔁 Повтори 10 раз медленно, затем ускоряйся.</p><p>👁️ Запомни визуальный паттерн случая.</p></div></section></div></div>`,
 }
 
 export default { components: { AlgorithmDetail, CubeDiagram, ProgressBar } }

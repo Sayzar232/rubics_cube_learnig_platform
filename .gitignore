@@ -34,7 +34,6 @@ postgres_data/
 node_modules/
 frontend/node_modules/
 design/node_modules/
-frontend/dist/
 .vite/
 *.tsbuildinfo
 npm-debug.log*
