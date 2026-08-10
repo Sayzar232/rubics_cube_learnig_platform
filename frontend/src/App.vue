@@ -16,13 +16,6 @@ const search = ref('')
 const showPassword = ref(false)
 const auth = ref({ username: '', email: '', password: '' })
 const heroColors = ['red', 'yellow', 'red', 'blue', 'yellow', 'green', 'orange', 'blue', 'green']
-const profileTab = ref('achievements')
-const activityDays = [true, true, false, true, true, true, true, true, false, true, true, true, true, false]
-const friends = [
-  { name: 'Mikhail K.', initials: 'MK', color: '#003DAA', streak: 14, oll: 32, pll: 12 },
-  { name: 'Sofia L.', initials: 'SL', color: '#C41E3A', streak: 7, oll: 57, pll: 19 },
-  { name: 'Dmitri V.', initials: 'DV', color: '#009B48', streak: 3, oll: 10, pll: 5 },
-]
 
 const api = async (url, options = {}) => {
   const response = await fetch(`/api${url}`, {
@@ -51,11 +44,31 @@ const streak = computed(() => {
   let count = 0
   const date = new Date()
   date.setHours(0, 0, 0, 0)
+  if (!learnedDates.has(date.toDateString())) {
+    date.setDate(date.getDate() - 1)
+  }
   while (learnedDates.has(date.toDateString())) {
     count += 1
     date.setDate(date.getDate() - 1)
   }
   return count
+})
+const activityDays = computed(() => {
+  const learnedDates = new Set((progress.value?.records || []).map((record) => new Date(record.learned_at).toDateString()))
+  const days = []
+  const today = new Date()
+
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(today.getDate() - i)
+    const isLearned = learnedDates.has(d.toDateString())
+    const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+    days.push({
+      dateStr,
+      active: isLearned,
+    })
+  }
+  return days
 })
 
 function consumeRoute() {
@@ -221,21 +234,19 @@ onMounted(async () => {
             </div>
             <section class="activity-card panel">
               <h2>Активность (последние 14 дней)</h2>
-              <div class="activity-days"><span v-for="(active, index) in activityDays" :key="index" :class="{ active }">{{ active ? '✓' : '' }}</span><div class="activity-legend"><i/> занятие <i class="muted"/> пропуск</div></div>
+              <div class="activity-days"><span v-for="(day, index) in activityDays" :key="index" :class="{ active: day.active }" :title="`${day.dateStr}: ${day.active ? 'Были занятия' : 'Пропуск'}`">{{ day.active ? '✓' : '' }}</span><div class="activity-legend"><i/> занятие <i class="muted"/> пропуск</div></div>
             </section>
-            <div class="profile-tabs"><button :class="{active: profileTab === 'achievements'}" @click="profileTab = 'achievements'">🏅 Достижения</button><button :class="{active: profileTab === 'friends'}" @click="profileTab = 'friends'">👥 Друзья</button></div>
-            <div v-if="profileTab === 'achievements'" class="achievement-grid">
-              <div class="achievement" :class="{unlocked: stats.learned_total >= 1}">🔥 <span><b>Первый алгоритм</b><small>Изучи свой первый алгоритм</small><em v-if="stats.learned_total >= 1">✓ Получено</em></span></div>
-              <div class="achievement" :class="{unlocked: stats.learned_total >= 5}">⚡ <span><b>Быстрый старт</b><small>Изучи 5 алгоритмов</small><em v-if="stats.learned_total >= 5">✓ Получено</em></span></div>
-              <div class="achievement" :class="{unlocked: stats.learned_total >= 10}">📚 <span><b>Усердный ученик</b><small>Изучи 10 алгоритмов</small></span></div>
-              <div class="achievement" :class="{unlocked: stats.oll_total && stats.oll_learned === stats.oll_total}">🏆 <span><b>Мастер OLL</b><small>Изучи все OLL случаи</small></span></div>
-              <div class="achievement" :class="{unlocked: stats.pll_total && stats.pll_learned === stats.pll_total}">💎 <span><b>Чемпион PLL</b><small>Изучи все PLL случаи</small></span></div>
-              <div class="achievement">🌟 <span><b>30-дневный стрик</b><small>Занимайся 30 дней подряд</small></span></div>
-            </div>
-            <div v-else class="friends-list">
-              <article v-for="friend in friends" :key="friend.name"><b class="friend-avatar" :style="{ background: friend.color }">{{ friend.initials }}</b><div><strong>{{ friend.name }}</strong><span>OLL: {{ friend.oll }}/57 · PLL: {{ friend.pll }}/21</span></div><p>🔥 <b>{{ friend.streak }}</b><small>стрик</small></p></article>
-              <button class="add-friend">+ Добавить друга</button>
-            </div>
+            <section class="achievements-section panel">
+              <h2 class="achievements-title">🏅 Достижения</h2>
+              <div class="achievement-grid">
+                <div class="achievement" :class="{unlocked: stats.learned_total >= 1}">🔥 <span><b>Первый алгоритм</b><small>Изучи свой первый алгоритм</small><em v-if="stats.learned_total >= 1">✓ Получено</em></span></div>
+                <div class="achievement" :class="{unlocked: stats.learned_total >= 5}">⚡ <span><b>Быстрый старт</b><small>Изучи 5 алгоритмов</small><em v-if="stats.learned_total >= 5">✓ Получено</em></span></div>
+                <div class="achievement" :class="{unlocked: stats.learned_total >= 10}">📚 <span><b>Усердный ученик</b><small>Изучи 10 алгоритмов</small><em v-if="stats.learned_total >= 10">✓ Получено</em></span></div>
+                <div class="achievement" :class="{unlocked: stats.oll_total && stats.oll_learned === stats.oll_total}">🏆 <span><b>Мастер OLL</b><small>Изучи все OLL случаи</small><em v-if="stats.oll_total && stats.oll_learned === stats.oll_total">✓ Получено</em></span></div>
+                <div class="achievement" :class="{unlocked: stats.pll_total && stats.pll_learned === stats.pll_total}">💎 <span><b>Чемпион PLL</b><small>Изучи все PLL случаи</small><em v-if="stats.pll_total && stats.pll_learned === stats.pll_total">✓ Получено</em></span></div>
+                <div class="achievement" :class="{unlocked: streak >= 30}">🌟 <span><b>30-дневный стрик</b><small>Занимайся 30 дней подряд</small><em v-if="streak >= 30">✓ Получено</em></span></div>
+              </div>
+            </section>
           </section>
         </main>
       </div>

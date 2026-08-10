@@ -14,7 +14,9 @@ PROJECT_ROOT = BACKEND_DIR.parent
 class Settings(BaseSettings):
     app_name: str = "CFOP Trainer"
     api_prefix: str = "/api"
-    secret_key: str = Field(default="change-me-in-production", alias="SECRET_KEY")
+    secret_key: str = Field(
+        default="change-me-in-production-secret-key-32bytes", alias="SECRET_KEY"
+    )
     jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
     access_token_expire_minutes: int = Field(default=60 * 24, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
     auth_cookie_name: str = Field(default="cfop_session", alias="AUTH_COOKIE_NAME")
