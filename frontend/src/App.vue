@@ -185,7 +185,7 @@ onMounted(async () => {
           </div>
           <div class="hero-cube-wrap"><div class="hero-cube"> <i v-for="(color, index) in heroColors" :key="index" :class="color"/></div><b class="cube-note cube-note--top">PLL ready ✓</b><b class="cube-note cube-note--bottom">OLL ×57</b></div>
         </section>
-        <section class="stat-banner"><div><b>57</b><span>OLL случаев</span></div><div><b>21</b><span>PLL случаев</span></div><div><b>10K+</b><span>учеников</span></div><div><b>98%</b><span>довольны</span></div></section>
+        <section class="stat-banner"><div><b>57</b><span>OLL случаев</span></div><div><b>21</b><span>PLL случаев</span></div><div><b>78</b><span>всего алгоритмов</span></div><div><b>100%</b><span>бесплатно</span></div></section>
         <section class="marketing-section"><h2>Всё, что нужно для мастерства</h2><div class="feature-grid">
           <article class="feature yellow"><span/> <h3>57 OLL алгоритмов</h3><p>Все случаи ориентации последнего слоя с визуальными диаграммами и пошаговым разбором.</p></article>
           <article class="feature blue"><span/> <h3>21 PLL алгоритм</h3><p>Каждая перестановка последнего слоя с понятной формулой и видеоразбором.</p></article>
