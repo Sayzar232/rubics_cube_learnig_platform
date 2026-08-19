@@ -1,4 +1,4 @@
-services:
+﻿services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -22,7 +22,7 @@ services:
       dockerfile: backend/Dockerfile
     restart: unless-stopped
     env_file:
-      - .env
+      - ./backend/.env
     depends_on:
       db:
         condition: service_healthy

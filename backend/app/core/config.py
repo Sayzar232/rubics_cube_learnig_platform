@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     algorithm_assets_dir: Path = PROJECT_ROOT / "frontend" / "public" / "assets" / "algorithms"
 
     model_config = SettingsConfigDict(
-        env_file=PROJECT_ROOT / ".env",
+        env_file=BACKEND_DIR / ".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
