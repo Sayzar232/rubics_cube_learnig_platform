@@ -17,8 +17,10 @@ const showPassword = ref(false)
 const auth = ref({ username: '', email: '', password: '' })
 const heroColors = ['red', 'yellow', 'red', 'blue', 'yellow', 'green', 'orange', 'blue', 'green']
 
+const apiBaseUrl = import.meta.env.VITE_API_URL.replace(/\/$/, '')
+
 const api = async (url, options = {}) => {
-  const response = await fetch(`/api${url}`, {
+  const response = await fetch(`${apiBaseUrl}/api${url}`, {
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
     ...options,

@@ -42,6 +42,7 @@ yarn-error.log*
 pnpm-debug.log*
 frontend/public/assets/algorithms/
 
+
 # IDE / OS
 .vscode/
 .idea/
