@@ -30,3 +30,17 @@ def get_current_user(
             detail="Пользователь по токену не найден.",
         )
     return user
+
+
+def get_optional_user(
+    token: str | None = Cookie(default=None, alias=settings.auth_cookie_name),
+    db: Session = Depends(get_db),
+) -> User | None:
+    """Like get_current_user but returns None instead of 401 for anonymous visitors."""
+    if not token:
+        return None
+    try:
+        payload = decode_access_token(token)
+        return db.scalar(select(User).where(User.id == int(payload["sub"])))
+    except Exception:
+        return None

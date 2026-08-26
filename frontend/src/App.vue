@@ -33,7 +33,7 @@ const api = async (url, options = {}) => {
 
 const route = () => window.location.hash.replace(/^#/, '') || '/'
 const navigate = (path) => { window.location.hash = path }
-const initials = computed(() => user.value?.username?.slice(0, 2).toUpperCase() || 'CL')
+const initials = computed(() => user.value?.username?.slice(0, 2).toUpperCase() || '?')
 const stats = computed(() => progress.value?.statistics || {
   oll_learned: 0, oll_total: 57, pll_learned: 0, pll_total: 21, learned_total: 0, total_algorithms: 78, overall_percentage: 0,
 })
@@ -59,16 +59,12 @@ const activityDays = computed(() => {
   const learnedDates = new Set((progress.value?.records || []).map((record) => new Date(record.learned_at).toDateString()))
   const days = []
   const today = new Date()
-
   for (let i = 13; i >= 0; i--) {
     const d = new Date(today)
     d.setDate(today.getDate() - i)
     const isLearned = learnedDates.has(d.toDateString())
     const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
-    days.push({
-      dateStr,
-      active: isLearned,
-    })
+    days.push({ dateStr, active: isLearned })
   }
   return days
 })
@@ -86,14 +82,21 @@ function consumeRoute() {
   } else if (value === '/profile') page.value = 'profile'
   else navigate('/')
 
-  if (['learning', 'algorithms', 'detail', 'profile'].includes(page.value) && !user.value) {
-    notice.value = 'Войдите, чтобы открыть обучение.'
-    navigate('/auth')
+  // All pages are accessible without auth.
+  // Data loading: if logged in, use full refreshData(); otherwise load public algorithms list.
+  if (page.value === 'learning') {
+    if (user.value) {
+      if (!dataLoaded.value || !currentAlgorithm.value) refreshData()
+      else currentAlgorithm.value = nextAlgorithm.value || algorithms.value[0] || null
+    } else {
+      // Anonymous: load algorithm list if not yet loaded, pick first
+      if (!dataLoaded.value) loadPublicAlgorithms().then(() => {
+        currentAlgorithm.value = algorithms.value[0] || null
+      })
+      else currentAlgorithm.value = algorithms.value[0] || null
+    }
   }
-  if (page.value === 'learning' && user.value) {
-    if (!dataLoaded.value || !currentAlgorithm.value) refreshData()
-    else currentAlgorithm.value = nextAlgorithm.value || algorithms.value[0] || null
-  }
+  if (['algorithms', 'detail'].includes(page.value) && !dataLoaded.value) loadPublicAlgorithms()
 }
 
 async function refreshData() {
@@ -114,8 +117,17 @@ async function refreshData() {
   }
 }
 
+async function loadPublicAlgorithms() {
+  if (dataLoaded.value) return
+  loading.value = true
+  try {
+    algorithms.value = await api('/algorithms')
+    dataLoaded.value = true
+  } catch (err) { error.value = err.message }
+  finally { loading.value = false }
+}
+
 async function loadAlgorithm(id) {
-  if (!user.value) return
   loading.value = true
   try { currentAlgorithm.value = await api(`/algorithms/${id}`) }
   catch (err) { error.value = err.message; navigate('/algorithms') }
@@ -131,6 +143,7 @@ async function submitAuth() {
       : { email: auth.value.email, password: auth.value.password }
     const result = await api(`/auth/${authMode.value === 'register' ? 'register' : 'login'}`, { method: 'POST', body: JSON.stringify(payload) })
     user.value = result.user
+    dataLoaded.value = false
     await refreshData()
     navigate('/learning')
   } catch (err) { error.value = err.message }
@@ -144,6 +157,13 @@ async function logout(request = true) {
 }
 
 async function markLearned() {
+  // Require login to write progress
+  if (!user.value) {
+    authMode.value = 'register'
+    notice.value = 'Зарегистрируйтесь, чтобы отмечать выученные алгоритмы.'
+    navigate('/auth')
+    return
+  }
   if (!currentAlgorithm.value || currentAlgorithm.value.is_learned) return
   loading.value = true
   try {
@@ -172,6 +192,7 @@ onMounted(async () => {
     <div v-if="notice" class="toast toast--notice" @click="notice = ''">{{ notice }}</div>
     <div v-if="error" class="toast toast--error" @click="error = ''">{{ error }}</div>
 
+    <!-- Landing page -->
     <template v-if="page === 'landing'">
       <header class="topbar landing-topbar">
         <a class="brand" href="#/"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a>
@@ -183,7 +204,7 @@ onMounted(async () => {
             <span class="eyebrow">🏆 OLL &amp; PLL мастер-класс</span>
             <h1>Собирай <em>кубик</em> <strong>Рубика</strong> как профи</h1>
             <p>Изучай OLL и PLL алгоритмы с визуальными диаграммами, видеоуроками и системой отслеживания прогресса.</p>
-            <div class="hero-actions"><a href="#/auth" class="button button--large">Начать бесплатно →</a><a href="#/auth" class="button button--muted button--large">Смотреть демо</a></div>
+            <div class="hero-actions"><a href="#/learning" class="button button--large">Начать бесплатно →</a><a href="#/algorithms" class="button button--muted button--large">Смотреть алгоритмы</a></div>
           </div>
           <div class="hero-cube-wrap"><div class="hero-cube"> <i v-for="(color, index) in heroColors" :key="index" :class="color"/></div><b class="cube-note cube-note--top">PLL ready ✓</b><b class="cube-note cube-note--bottom">OLL ×57</b></div>
         </section>
@@ -194,12 +215,13 @@ onMounted(async () => {
           <article class="feature red"><span/> <h3>Дневной стрик</h3><p>Отслеживай прогресс и зарабатывай достижения.</p></article>
           <article class="feature green"><span/> <h3>Структурное обучение</h3><p>Алгоритмы идут по порядку: от первых шагов до уверенного CFOP.</p></article>
         </div></section>
-        <section class="how"><h2>Как это работает</h2><div class="steps"><article><b>01</b><h3>Зарегистрируйся</h3><p>Создай аккаунт за 30 секунд</p></article><article><b>02</b><h3>Выбери алгоритм</h3><p>OLL или PLL — начни с простых</p></article><article><b>03</b><h3>Тренируйся</h3><p>Диаграмма, видео и практика</p></article></div></section>
-        <section class="cta"><h2>Готов стать мастером?</h2><p>Присоединяйся к спидкуберам, которые уже изучают OLL и PLL.</p><a href="#/auth" class="button button--large">Начать бесплатно →</a></section>
+        <section class="how"><h2>Как это работает</h2><div class="steps"><article><b>01</b><h3>Открой алгоритм</h3><p>Выбери OLL или PLL — без регистрации</p></article><article><b>02</b><h3>Изучи и практикуй</h3><p>Диаграмма, видео и практика</p></article><article><b>03</b><h3>Сохраняй прогресс</h3><p>Зарегистрируйся и отмечай выученные</p></article></div></section>
+        <section class="cta"><h2>Готов стать мастером?</h2><p>Все 78 алгоритмов доступны бесплатно — без регистрации.</p><a href="#/learning" class="button button--large">Начать изучение →</a></section>
       </main>
       <footer>© 2026 CubeLearn. Все права защищены.</footer>
     </template>
 
+    <!-- Auth page -->
     <section v-else-if="page === 'auth'" class="auth-page">
       <div class="auth-card"><aside class="auth-aside"><a class="brand"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a><div><h1>Стань мастером кубика Рубика</h1><p>Изучай OLL и PLL алгоритмы с профессиональными диаграммами и видеоуроками.</p></div></aside>
         <form class="auth-form" @submit.prevent="submitAuth"><div class="auth-tabs"><button type="button" :class="{active: authMode === 'login'}" @click="authMode = 'login'">Войти</button><button type="button" :class="{active: authMode === 'register'}" @click="authMode = 'register'">Регистрация</button></div><h2>{{ authMode === 'login' ? 'С возвращением!' : 'Создать аккаунт' }}</h2>
@@ -212,44 +234,109 @@ onMounted(async () => {
       </div>
     </section>
 
+    <!-- App shell — ALL other pages, for both guests and logged-in users -->
     <div v-else class="app-shell">
-      <aside class="sidebar"><a href="#/learning" class="brand sidebar-brand"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a><nav class="side-nav"><a :class="{active: page === 'learning' || page === 'detail'}" href="#/learning">⌑ <span>Обучение</span></a><button @click="notice = 'Тренировка появится в следующей версии.'">◷ <span>Тренировка</span></button><a :class="{active: page === 'algorithms'}" href="#/algorithms">▦ <span>Алгоритмы</span></a><a :class="{active: page === 'profile'}" href="#/profile">♙ <span>Профиль</span></a><button @click="notice = 'Настройки будут доступны в следующей версии.'">⚙ <span>Настройки</span></button></nav><div class="sidebar-user"><b>{{ initials }}</b><span>{{ user?.username }}</span></div></aside>
-      <div class="workspace"><header class="topbar app-topbar"><a class="brand" href="#/learning"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a><div><a href="#/profile" class="avatar">{{ initials }}</a><button class="button button--dark" @click="logout()">Выйти</button></div></header>
+      <aside class="sidebar">
+        <a href="#/learning" class="brand sidebar-brand"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a>
+        <nav class="side-nav">
+          <a :class="{active: page === 'learning' || page === 'detail'}" href="#/learning">⌑ <span>Обучение</span></a>
+          <button @click="notice = 'Тренировка появится в следующей версии.'">◷ <span>Тренировка</span></button>
+          <a :class="{active: page === 'algorithms'}" href="#/algorithms">▦ <span>Алгоритмы</span></a>
+          <a :class="{active: page === 'profile'}" href="#/profile">♙ <span>Профиль</span></a>
+          <button @click="notice = 'Настройки будут доступны в следующей версии.'">⚙ <span>Настройки</span></button>
+        </nav>
+        <div class="sidebar-user">
+          <b>{{ initials }}</b>
+          <span>{{ user ? user.username : 'Гость' }}</span>
+        </div>
+      </aside>
+      <div class="workspace">
+        <header class="topbar app-topbar">
+          <a class="brand" href="#/learning"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a>
+          <div v-if="user">
+            <a href="#/profile" class="avatar">{{ initials }}</a>
+            <button class="button button--dark" @click="logout()">Выйти</button>
+          </div>
+          <div v-else>
+            <a href="#/auth" class="button button--outline">Войти</a>
+            <a href="#/auth" class="button" @click="authMode = 'register'">Регистрация</a>
+          </div>
+        </header>
         <main class="app-main">
+
+          <!-- Learning page -->
           <section v-if="page === 'learning'" class="page-container">
-            <div v-if="loading || !dataLoaded" class="empty"><h1>Загружаем алгоритмы…</h1><p>Получаем ваш прогресс и следующий алгоритм.</p></div>
+            <div v-if="loading || !dataLoaded" class="empty"><h1>Загружаем алгоритмы…</h1><p>Получаем алгоритмы для изучения.</p></div>
             <div v-else-if="!algorithms.length" class="empty"><h1>Каталог пока пуст</h1><p>В базе нет алгоритмов. Запустите seed-парсер бэкенда и обновите страницу.</p><a href="#/algorithms" class="button">Открыть каталог</a></div>
             <div v-else-if="!currentAlgorithm" class="empty"><h1>Все алгоритмы изучены! 🎉</h1><p>Отличная работа — загляните в каталог для повторения.</p><a href="#/algorithms" class="button">Каталог алгоритмов</a></div>
             <AlgorithmDetail v-else :algorithm="currentAlgorithm" :stats="stats" :loading="loading" @complete="markLearned" @next="openLearning" @catalog="navigate('/algorithms')" />
           </section>
-          <section v-else-if="page === 'algorithms'" class="page-container"><div class="page-heading"><div><h1>Алгоритмы</h1><p>Выбери случай и изучай его в удобном темпе.</p></div><button class="button" @click="openLearning">Продолжить обучение →</button></div><div class="catalog-controls"><div class="segmented"><button :class="{active: filter === 'OLL'}" @click="filter = 'OLL'">OLL</button><button :class="{active: filter === 'PLL'}" @click="filter = 'PLL'">PLL</button></div><input v-model="search" placeholder="Поиск алгоритма…" /></div><div v-if="loading" class="empty">Загрузка…</div><div v-else class="algorithm-grid"><button v-for="algorithm in filteredAlgorithms" :key="algorithm.id" class="algorithm-card" :class="algorithm.category.toLowerCase()" @click="navigate(`/algorithms/${algorithm.id}`)"><span class="learned-mark" :class="{learned: algorithm.is_learned}">{{ algorithm.is_learned ? '✓ Изучен' : `${algorithm.category} #${algorithm.algorithm_number}` }}</span><CubeDiagram :algorithm="algorithm"/><h3>{{ algorithm.name }}</h3><code>{{ algorithm.formula }}</code></button></div><div v-if="!loading && !filteredAlgorithms.length" class="empty">Алгоритмы не найдены.</div></section>
-          <section v-else-if="page === 'detail'" class="page-container"><div v-if="loading" class="empty">Загрузка…</div><AlgorithmDetail v-else-if="currentAlgorithm" :algorithm="currentAlgorithm" :stats="stats" :loading="loading" @complete="markLearned" @next="openLearning" @catalog="navigate('/algorithms')" /><div v-else class="empty">Алгоритм не найден.</div></section>
-          <section v-else-if="page === 'profile'" class="page-container profile profile-design">
-            <div class="profile-card design-profile-card">
-              <div class="profile-avatar">{{ initials }}</div>
-              <div class="profile-name">
-                <h1>{{ user?.username }}</h1>
-                <p>Спидкубер · с нами с {{ user?.created_at ? new Date(user.created_at).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }) : 'сегодня' }}</p>
-                <div class="progress-pairs"><ProgressBar label="OLL" :done="stats.oll_learned" :total="stats.oll_total" color="yellow"/><ProgressBar label="PLL" :done="stats.pll_learned" :total="stats.pll_total" color="blue"/></div>
-              </div>
-              <div class="streak-card"><span>🔥</span><b>{{ streak }}</b><small>дней подряд</small></div>
+
+          <!-- Algorithms catalog -->
+          <section v-else-if="page === 'algorithms'" class="page-container">
+            <div class="page-heading">
+              <div><h1>Алгоритмы</h1><p>Выбери случай и изучай его в удобном темпе.</p></div>
+              <button class="button" @click="openLearning">Продолжить обучение →</button>
             </div>
-            <section class="activity-card panel">
-              <h2>Активность (последние 14 дней)</h2>
-              <div class="activity-days"><span v-for="(day, index) in activityDays" :key="index" :class="{ active: day.active }" :title="`${day.dateStr}: ${day.active ? 'Были занятия' : 'Пропуск'}`">{{ day.active ? '✓' : '' }}</span><div class="activity-legend"><i/> занятие <i class="muted"/> пропуск</div></div>
-            </section>
-            <section class="achievements-section panel">
-              <h2 class="achievements-title">🏅 Достижения</h2>
-              <div class="achievement-grid">
-                <div class="achievement" :class="{unlocked: stats.learned_total >= 1}">🔥 <span><b>Первый алгоритм</b><small>Изучи свой первый алгоритм</small><em v-if="stats.learned_total >= 1">✓ Получено</em></span></div>
-                <div class="achievement" :class="{unlocked: stats.learned_total >= 5}">⚡ <span><b>Быстрый старт</b><small>Изучи 5 алгоритмов</small><em v-if="stats.learned_total >= 5">✓ Получено</em></span></div>
-                <div class="achievement" :class="{unlocked: stats.learned_total >= 10}">📚 <span><b>Усердный ученик</b><small>Изучи 10 алгоритмов</small><em v-if="stats.learned_total >= 10">✓ Получено</em></span></div>
-                <div class="achievement" :class="{unlocked: stats.oll_total && stats.oll_learned === stats.oll_total}">🏆 <span><b>Мастер OLL</b><small>Изучи все OLL случаи</small><em v-if="stats.oll_total && stats.oll_learned === stats.oll_total">✓ Получено</em></span></div>
-                <div class="achievement" :class="{unlocked: stats.pll_total && stats.pll_learned === stats.pll_total}">💎 <span><b>Чемпион PLL</b><small>Изучи все PLL случаи</small><em v-if="stats.pll_total && stats.pll_learned === stats.pll_total">✓ Получено</em></span></div>
-                <div class="achievement" :class="{unlocked: streak >= 30}">🌟 <span><b>30-дневный стрик</b><small>Занимайся 30 дней подряд</small><em v-if="streak >= 30">✓ Получено</em></span></div>
-              </div>
-            </section>
+            <div class="catalog-controls"><div class="segmented"><button :class="{active: filter === 'OLL'}" @click="filter = 'OLL'">OLL</button><button :class="{active: filter === 'PLL'}" @click="filter = 'PLL'">PLL</button></div><input v-model="search" placeholder="Поиск алгоритма…" /></div>
+            <div v-if="loading" class="empty">Загрузка…</div>
+            <div v-else class="algorithm-grid"><button v-for="algorithm in filteredAlgorithms" :key="algorithm.id" class="algorithm-card" :class="algorithm.category.toLowerCase()" @click="navigate(`/algorithms/${algorithm.id}`)"><span class="learned-mark" :class="{learned: algorithm.is_learned}">{{ algorithm.is_learned ? '✓ Изучен' : `${algorithm.category} #${algorithm.algorithm_number}` }}</span><CubeDiagram :algorithm="algorithm"/><h3>{{ algorithm.name }}</h3><code>{{ algorithm.formula }}</code></button></div>
+            <div v-if="!loading && !filteredAlgorithms.length" class="empty">Алгоритмы не найдены.</div>
           </section>
+
+          <!-- Algorithm detail -->
+          <section v-else-if="page === 'detail'" class="page-container">
+            <div v-if="loading" class="empty">Загрузка…</div>
+            <AlgorithmDetail v-else-if="currentAlgorithm" :algorithm="currentAlgorithm" :stats="stats" :loading="loading" @complete="markLearned" @next="openLearning" @catalog="navigate('/algorithms')" />
+            <div v-else class="empty">Алгоритм не найден.</div>
+          </section>
+
+          <!-- Profile page -->
+          <section v-else-if="page === 'profile'" class="page-container profile profile-design">
+            <!-- Guest profile: CTA to register -->
+            <div v-if="!user" class="guest-profile-cta">
+              <div class="guest-profile-icon">?</div>
+              <h1>Вы просматриваете как гость</h1>
+              <p>Зарегистрируйтесь, чтобы отслеживать прогресс, зарабатывать достижения и сохранять изученные алгоритмы.</p>
+              <div class="guest-profile-actions">
+                <a href="#/auth" class="button button--large" @click="authMode = 'register'">Создать аккаунт →</a>
+                <a href="#/auth" class="button button--outline button--large">Уже есть аккаунт? Войти</a>
+              </div>
+              <div class="guest-features">
+                <div class="guest-feature"><span>📊</span><b>Прогресс</b><small>Отмечай выученные алгоритмы</small></div>
+                <div class="guest-feature"><span>🔥</span><b>Стрик</b><small>Ежедневные занятия</small></div>
+                <div class="guest-feature"><span>🏅</span><b>Достижения</b><small>Разблокируй награды</small></div>
+              </div>
+            </div>
+            <!-- Authenticated profile -->
+            <template v-else>
+              <div class="profile-card design-profile-card">
+                <div class="profile-avatar">{{ initials }}</div>
+                <div class="profile-name">
+                  <h1>{{ user?.username }}</h1>
+                  <p>Спидкубер · с нами с {{ user?.created_at ? new Date(user.created_at).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }) : 'сегодня' }}</p>
+                  <div class="progress-pairs"><ProgressBar label="OLL" :done="stats.oll_learned" :total="stats.oll_total" color="yellow"/><ProgressBar label="PLL" :done="stats.pll_learned" :total="stats.pll_total" color="blue"/></div>
+                </div>
+                <div class="streak-card"><span>🔥</span><b>{{ streak }}</b><small>дней подряд</small></div>
+              </div>
+              <section class="activity-card panel">
+                <h2>Активность (последние 14 дней)</h2>
+                <div class="activity-days"><span v-for="(day, index) in activityDays" :key="index" :class="{ active: day.active }" :title="`${day.dateStr}: ${day.active ? 'Были занятия' : 'Пропуск'}`">{{ day.active ? '✓' : '' }}</span><div class="activity-legend"><i/> занятие <i class="muted"/> пропуск</div></div>
+              </section>
+              <section class="achievements-section panel">
+                <h2 class="achievements-title">🏅 Достижения</h2>
+                <div class="achievement-grid">
+                  <div class="achievement" :class="{unlocked: stats.learned_total >= 1}">🔥 <span><b>Первый алгоритм</b><small>Изучи свой первый алгоритм</small><em v-if="stats.learned_total >= 1">✓ Получено</em></span></div>
+                  <div class="achievement" :class="{unlocked: stats.learned_total >= 5}">⚡ <span><b>Быстрый старт</b><small>Изучи 5 алгоритмов</small><em v-if="stats.learned_total >= 5">✓ Получено</em></span></div>
+                  <div class="achievement" :class="{unlocked: stats.learned_total >= 10}">📚 <span><b>Усердный ученик</b><small>Изучи 10 алгоритмов</small><em v-if="stats.learned_total >= 10">✓ Получено</em></span></div>
+                  <div class="achievement" :class="{unlocked: stats.oll_total && stats.oll_learned === stats.oll_total}">🏆 <span><b>Мастер OLL</b><small>Изучи все OLL случаи</small><em v-if="stats.oll_total && stats.oll_learned === stats.oll_total">✓ Получено</em></span></div>
+                  <div class="achievement" :class="{unlocked: stats.pll_total && stats.pll_learned === stats.pll_total}">💎 <span><b>Чемпион PLL</b><small>Изучи все PLL случаи</small><em v-if="stats.pll_total && stats.pll_learned === stats.pll_total">✓ Получено</em></span></div>
+                  <div class="achievement" :class="{unlocked: streak >= 30}">🌟 <span><b>30-дневный стрик</b><small>Занимайся 30 дней подряд</small><em v-if="streak >= 30">✓ Получено</em></span></div>
+                </div>
+              </section>
+            </template>
+          </section>
+
         </main>
       </div>
     </div>
@@ -309,25 +396,20 @@ const AlgorithmDetail = {
     embedUrl() {
       const videoUrl = this.algorithm?.video_url
       if (!videoUrl) return null
-
       try {
         const url = new URL(videoUrl)
         const host = url.hostname.replace(/^www\./, '').toLowerCase()
         const pathParts = url.pathname.split('/').filter(Boolean)
         let videoId = null
-
         if (host === 'youtu.be') videoId = pathParts[0]
         else if (host === 'youtube.com' || host.endsWith('.youtube.com')) {
           if (pathParts[0] === 'watch') videoId = url.searchParams.get('v')
           else if (['embed', 'shorts', 'live'].includes(pathParts[0])) videoId = pathParts[1]
         }
-
         return /^[\w-]{11}$/.test(videoId || '')
           ? `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`
           : null
-      } catch {
-        return null
-      }
+      } catch { return null }
     },
   },
   template: `<div class="detail"><div class="detail-heading"><div><button class="back-link" @click="$emit('catalog')">← К каталогу</button><h1>{{ algorithm.category }} #{{ algorithm.algorithm_number }} — {{ algorithm.name }}</h1><p>{{ stats.learned_total }} из {{ stats.total_algorithms }} изучено</p></div><button class="button button--dark" @click="$emit('next')">Следующий →</button></div><div class="detail-progress"><i :style="{ width: stats.overall_percentage + '%' }"/></div><div class="detail-grid"><section><div class="diagram-card" :class="isOll ? 'oll' : 'pll'"><CubeDiagram :algorithm="algorithm"/><span>{{ algorithm.category }} · вид сверху</span></div><div class="formula-card"><small>АЛГОРИТМ</small><div><code v-for="(move, index) in algorithm.formula.split(' ')" :key="index">{{ move }}</code></div><button v-if="!algorithm.is_learned" class="master-button" :disabled="loading" @click="$emit('complete')">{{ loading ? 'Сохраняем…' : '✓ Отметить как выученный' }}</button><p v-else class="mastered">✓ Алгоритм изучен</p></div></section><section><div class="video-card"><iframe v-if="embedUrl" class="video-player" :src="embedUrl" :title="algorithm.name + ' — видеоурок'" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"/><a v-else-if="algorithm.video_url" :href="algorithm.video_url" target="_blank" rel="noreferrer" class="video-link"><span>▶</span><b>{{ algorithm.name }} — видеоурок</b><small>Открыть видео</small></a><div v-else class="video-placeholder"><span>▶</span><b>{{ algorithm.name }} — видеоурок</b><small>Видео будет добавлено позже</small></div></div><div class="tips"><h2>💡 Советы по запоминанию</h2><p>🎯 Разбей алгоритм на блоки по 3–4 хода.</p><p>🔁 Повтори 10 раз медленно, затем ускоряйся.</p><p>👁️ Запомни визуальный паттерн случая.</p></div></section></div></div>`,

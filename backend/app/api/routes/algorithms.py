@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from ...auth.dependencies import get_current_user
+from ...auth.dependencies import get_current_user, get_optional_user
 from ...core.database import get_db
 from ...models.algorithm import AlgorithmCategory
 from ...models.user import User
@@ -18,7 +18,7 @@ router = APIRouter(prefix="/algorithms", tags=["algorithms"])
 def get_algorithms(
     category: AlgorithmCategory | None = Query(default=None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User | None = Depends(get_optional_user),
 ) -> list[AlgorithmRead]:
     return list_algorithms(db, current_user, category)
 
@@ -47,7 +47,7 @@ def get_next(
 def get_algorithm(
     algorithm_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User | None = Depends(get_optional_user),
 ) -> AlgorithmRead:
     try:
         return get_algorithm_details(db, current_user, algorithm_id)

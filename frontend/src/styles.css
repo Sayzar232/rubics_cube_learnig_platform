@@ -109,3 +109,14 @@
 
   .toast { top:12px; right:14px; left:14px; max-width:none; }
 }
+
+.guest-profile-cta { background:#fff; border:2px solid var(--line); border-radius:20px; padding:52px 40px; text-align:center; max-width:600px; margin:auto; }
+.guest-profile-icon { display:grid; place-items:center; width:80px; height:80px; border-radius:50%; background:#f0f0f0; border:3px solid var(--line); font:900 30px Nunito; color:#aaa; margin:0 auto 22px; }
+.guest-profile-cta h1 { font-size:26px; margin:0 0 12px; }
+.guest-profile-cta > p { color:#666; line-height:1.6; margin:0 0 28px; }
+.guest-profile-actions { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:36px; }
+.guest-features { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.guest-feature { background:#f9f9f9; border:2px solid var(--line); border-radius:14px; padding:20px 14px; text-align:center; }
+.guest-feature span { display:block; font-size:28px; margin-bottom:8px; }
+.guest-feature b { display:block; font-size:15px; margin-bottom:4px; }
+.guest-feature small { color:#888; font-size:12px; }

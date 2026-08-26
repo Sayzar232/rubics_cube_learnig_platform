@@ -91,14 +91,16 @@ def serialize_algorithm(algorithm: Algorithm, is_learned: bool) -> AlgorithmRead
     )
 
 
-def get_learned_algorithm_ids(db: Session, user: User) -> set[int]:
+def get_learned_algorithm_ids(db: Session, user: User | None) -> set[int]:
+    if user is None:
+        return set()
     rows = db.scalars(select(UserProgress.algorithm_id).where(UserProgress.user_id == user.id)).all()
     return set(rows)
 
 
 def list_algorithms(
     db: Session,
-    user: User,
+    user: User | None,
     category: AlgorithmCategory | None = None,
 ) -> list[AlgorithmRead]:
     learned_ids = get_learned_algorithm_ids(db, user)
@@ -116,7 +118,7 @@ def get_algorithm_or_404(db: Session, algorithm_id: int) -> Algorithm:
     return algorithm
 
 
-def get_algorithm_details(db: Session, user: User, algorithm_id: int) -> AlgorithmRead:
+def get_algorithm_details(db: Session, user: User | None, algorithm_id: int) -> AlgorithmRead:
     algorithm = get_algorithm_or_404(db, algorithm_id)
     learned_ids = get_learned_algorithm_ids(db, user)
     return serialize_algorithm(algorithm, algorithm.id in learned_ids)
