@@ -1,5 +1,14 @@
 from .algorithm import AlgorithmRead, NextAlgorithmResponse
-from .auth import LoginRequest, RegisterRequest, TokenResponse, UserRead
+from .auth import (
+    LoginRequest,
+    MessageResponse,
+    RegisterRequest,
+    RegisterResponse,
+    ResendVerificationRequest,
+    TokenResponse,
+    UserRead,
+    VerifyRequest,
+)
 from .progress import CompleteAlgorithmResponse, ProgressOverview, ProgressStatistics
 
 __all__ = [

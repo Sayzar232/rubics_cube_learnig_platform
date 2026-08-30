@@ -45,5 +45,10 @@ def authenticate_user(db: Session, payload: LoginRequest) -> User:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Неверный email или пароль.",
         )
+    if not user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Почта не подтверждена. Перейдите по ссылке из письма, которое мы отправили при регистрации.",
+        )
     return user
 

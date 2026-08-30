@@ -1,5 +1,6 @@
-<script setup>
+﻿<script setup>
 import { computed, onMounted, ref } from 'vue'
+
 
 const page = ref('landing')
 const authMode = ref('login')
@@ -11,6 +12,14 @@ const loading = ref(false)
 const dataLoaded = ref(false)
 const error = ref('')
 const notice = ref('')
+// --- Подтверждение email ---
+const verificationSent = ref(false)      // показать панель «письмо отправлено» на странице auth
+const pendingEmail = ref('')             // email только что зарегистрированного пользователя
+const resending = ref(false)
+const resendNotice = ref('')
+const showResendHint = ref(false)        // подсказка переотправки при логине с 403
+const verificationState = ref('idle')    // idle | verifying | success | error (страница #/verify)
+const verificationMessage = ref('')
 const filter = ref('OLL')
 const search = ref('')
 const showPassword = ref(false)
@@ -80,6 +89,16 @@ function consumeRoute() {
     const id = Number(value.split('/').pop())
     if (id) loadAlgorithm(id)
   } else if (value === '/profile') page.value = 'profile'
+  else if (value.startsWith('/verify')) {
+    page.value = 'verify'
+    const token = new URLSearchParams(value.split('?')[1] || '').get('token')
+    if (!token) {
+      verificationState.value = 'error'
+      verificationMessage.value = 'В ссылке отсутствует токен подтверждения.'
+    } else if (verificationState.value !== 'success') {
+      verifyEmail(token)
+    }
+  }
   else navigate('/')
 
   // All pages are accessible without auth.
@@ -134,20 +153,64 @@ async function loadAlgorithm(id) {
   finally { loading.value = false }
 }
 
+function setAuthMode(mode) {
+  authMode.value = mode
+  verificationSent.value = false
+  showResendHint.value = false
+}
+
 async function submitAuth() {
   error.value = ''
+  resendNotice.value = ''
+  showResendHint.value = false
   loading.value = true
   try {
     const payload = authMode.value === 'register'
       ? { username: auth.value.username, email: auth.value.email, password: auth.value.password }
       : { email: auth.value.email, password: auth.value.password }
-    const result = await api(`/auth/${authMode.value === 'register' ? 'register' : 'login'}`, { method: 'POST', body: JSON.stringify(payload) })
+    const result = await api(`/auth/${authMode.value}`, { method: 'POST', body: JSON.stringify(payload) })
+    if (authMode.value === 'register') {
+      // Вход выполняется только после перехода по ссылке из письма.
+      pendingEmail.value = result.user.email
+      verificationSent.value = true
+      notice.value = result.message
+      return
+    }
     user.value = result.user
     dataLoaded.value = false
     await refreshData()
     navigate('/learning')
+  } catch (err) {
+    error.value = err.message
+    if (authMode.value === 'login' && String(err.message).includes('подтвержден')) showResendHint.value = true
+  } finally { loading.value = false }
+}
+
+async function resendVerification(email) {
+  resending.value = true
+  resendNotice.value = ''
+  error.value = ''
+  try {
+    const result = await api('/auth/resend-verification', { method: 'POST', body: JSON.stringify({ email }) })
+    resendNotice.value = result.message
   } catch (err) { error.value = err.message }
-  finally { loading.value = false }
+  finally { resending.value = false }
+}
+
+async function verifyEmail(token) {
+  verificationState.value = 'verifying'
+  try {
+    const result = await api('/auth/verify', { method: 'POST', body: JSON.stringify({ token }) })
+    user.value = result.user
+    dataLoaded.value = false
+    await refreshData()
+    verificationState.value = 'success'
+    notice.value = 'Почта подтверждена. Добро пожаловать в CubeLearn!'
+    navigate('/learning')
+  } catch (err) {
+    verificationState.value = 'error'
+    verificationMessage.value = err.message
+  }
 }
 
 async function logout(request = true) {
@@ -159,7 +222,7 @@ async function logout(request = true) {
 async function markLearned() {
   // Require login to write progress
   if (!user.value) {
-    authMode.value = 'register'
+    setAuthMode('register')
     notice.value = 'Зарегистрируйтесь, чтобы отмечать выученные алгоритмы.'
     navigate('/auth')
     return
@@ -224,13 +287,45 @@ onMounted(async () => {
     <!-- Auth page -->
     <section v-else-if="page === 'auth'" class="auth-page">
       <div class="auth-card"><aside class="auth-aside"><a class="brand"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a><div><h1>Стань мастером кубика Рубика</h1><p>Изучай OLL и PLL алгоритмы с профессиональными диаграммами и видеоуроками.</p></div></aside>
-        <form class="auth-form" @submit.prevent="submitAuth"><div class="auth-tabs"><button type="button" :class="{active: authMode === 'login'}" @click="authMode = 'login'">Войти</button><button type="button" :class="{active: authMode === 'register'}" @click="authMode = 'register'">Регистрация</button></div><h2>{{ authMode === 'login' ? 'С возвращением!' : 'Создать аккаунт' }}</h2>
+        <template v-if="verificationSent && authMode === 'register'">
+          <form class="auth-form" @submit.prevent="resendVerification(pendingEmail)">
+            <h2>Почти готово! Проверьте ящик 📬</h2>
+            <p>Мы отправили письмо со ссылкой подтверждения на <strong>{{ pendingEmail }}</strong>. Откройте его и перейдите по ссылке — после этого вы сможете войти.</p>
+            <p v-if="resendNotice">{{ resendNotice }}</p>
+            <button class="button auth-submit" :disabled="resending">{{ resending ? 'Отправляем…' : 'Отправить письмо ещё раз' }}</button>
+            <p><button type="button" class="text-button" @click="verificationSent = false">← Изменить данные регистрации</button></p><a href="#/" class="back-link">← На главную</a>
+          </form>
+        </template>
+        <form v-else class="auth-form" @submit.prevent="submitAuth"><div class="auth-tabs"><button type="button" :class="{active: authMode === 'login'}" @click="setAuthMode('login')">Войти</button><button type="button" :class="{active: authMode === 'register'}" @click="setAuthMode('register')">Регистрация</button></div><h2>{{ authMode === 'login' ? 'С возвращением!' : 'Создать аккаунт' }}</h2>
           <label v-if="authMode === 'register'">Имя пользователя<input v-model.trim="auth.username" minlength="3" maxlength="50" required placeholder="Alex Petrov" /></label>
           <label>Email<input v-model.trim="auth.email" type="email" required placeholder="alex@example.com" /></label>
           <label>Пароль<div class="password-field"><input v-model="auth.password" :type="showPassword ? 'text' : 'password'" minlength="8" required placeholder="Минимум 8 символов"/><button type="button" @click="showPassword = !showPassword">{{ showPassword ? 'Скрыть' : 'Показать' }}</button></div></label>
           <button class="button auth-submit" :disabled="loading">{{ loading ? 'Подождите…' : authMode === 'login' ? 'Войти в аккаунт' : 'Создать аккаунт' }}</button>
-          <p>{{ authMode === 'login' ? 'Нет аккаунта?' : 'Уже есть аккаунт?' }} <button type="button" class="text-button" @click="authMode = authMode === 'login' ? 'register' : 'login'">{{ authMode === 'login' ? 'Зарегистрируйся' : 'Войди' }}</button></p><a href="#/" class="back-link">← На главную</a>
+          <p v-if="showResendHint"><button type="button" class="text-button" @click="resendVerification(auth.email)">{{ resending ? 'Отправляем…' : 'Не пришло письмо? Отправить ещё раз' }}</button></p>
+          <p v-if="resendNotice">{{ resendNotice }}</p>
+          <p>{{ authMode === 'login' ? 'Нет аккаунта?' : 'Уже есть аккаунт?' }} <button type="button" class="text-button" @click="setAuthMode(authMode === 'login' ? 'register' : 'login')">{{ authMode === 'login' ? 'Зарегистрируйся' : 'Войди' }}</button></p><a href="#/" class="back-link">← На главную</a>
         </form>
+      </div>
+    </section>
+
+    <!-- Email verification -->
+    <section v-else-if="page === 'verify'" class="auth-page">
+      <div class="auth-card"><aside class="auth-aside"><a class="brand"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a><div><h1>Подтверждение почты</h1><p>Проверяем вашу ссылку.</p></div></aside>
+        <div class="auth-form">
+          <template v-if="verificationState === 'verifying'">
+            <h2>Подтверждаем почту…</h2>
+            <p>Это займёт пару секунд.</p>
+          </template>
+          <template v-else-if="verificationState === 'success'">
+            <h2>Почта подтверждена ✔</h2>
+            <p>Перенаправляем вас в обучение…</p>
+          </template>
+          <template v-else>
+            <h2>Не удалось подтвердить почту</h2>
+            <p>{{ verificationMessage || 'Ссылка недействительна или срок её действия истёк.' }}</p>
+            <a href="#/auth" class="button auth-submit">Войти или зарегистрироваться</a>
+          </template>
+        </div>
       </div>
     </section>
 
@@ -259,7 +354,7 @@ onMounted(async () => {
           </div>
           <div v-else>
             <a href="#/auth" class="button button--outline">Войти</a>
-            <a href="#/auth" class="button" @click="authMode = 'register'">Регистрация</a>
+            <a href="#/auth" class="button" @click="setAuthMode('register')">Регистрация</a>
           </div>
         </header>
         <main class="app-main">
@@ -299,7 +394,7 @@ onMounted(async () => {
               <h1>Вы просматриваете как гость</h1>
               <p>Зарегистрируйтесь, чтобы отслеживать прогресс, зарабатывать достижения и сохранять изученные алгоритмы.</p>
               <div class="guest-profile-actions">
-                <a href="#/auth" class="button button--large" @click="authMode = 'register'">Создать аккаунт →</a>
+                <a href="#/auth" class="button button--large" @click="setAuthMode('register')">Создать аккаунт →</a>
                 <a href="#/auth" class="button button--outline button--large">Уже есть аккаунт? Войти</a>
               </div>
               <div class="guest-features">

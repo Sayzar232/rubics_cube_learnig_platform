@@ -21,6 +21,20 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = Field(default=60 * 24, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
     auth_cookie_name: str = Field(default="cfop_session", alias="AUTH_COOKIE_NAME")
     auth_cookie_secure: bool = Field(default=False, alias="AUTH_COOKIE_SECURE")
+    # --- Подтверждение email ---
+    smtp_host: str = Field(default="", alias="SMTP_HOST")
+    smtp_port: int = Field(default=587, alias="SMTP_PORT")
+    smtp_use_tls: bool = Field(default=True, alias="SMTP_USE_TLS")
+    smtp_use_ssl: bool = Field(default=False, alias="SMTP_USE_SSL")
+    smtp_user: str = Field(default="", alias="SMTP_USER")
+    smtp_password: str = Field(default="", alias="SMTP_PASSWORD")
+    smtp_from: str = Field(
+        default="CubeLearn <no-reply@cubelearn.local>", alias="SMTP_FROM"
+    )
+    email_verification_expire_minutes: int = Field(
+        default=60 * 24, alias="EMAIL_VERIFICATION_EXPIRE_MINUTES"
+    )
+    frontend_url: str = Field(default="http://localhost:5173", alias="FRONTEND_URL")
     cors_origins: str = Field(
         default="http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173",
         alias="CORS_ORIGINS",

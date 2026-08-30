@@ -12,6 +12,7 @@ class UserRead(BaseModel):
     username: str
     email: EmailStr
     created_at: datetime
+    is_verified: bool
 
 
 class RegisterRequest(BaseModel):
@@ -25,5 +26,22 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=8, max_length=128)
 
 
+class VerifyRequest(BaseModel):
+    token: str = Field(min_length=10, max_length=4096)
+
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
+
+
 class TokenResponse(BaseModel):
     user: UserRead
+
+
+class RegisterResponse(BaseModel):
+    user: UserRead
+    message: str
+
+
+class MessageResponse(BaseModel):
+    message: str
