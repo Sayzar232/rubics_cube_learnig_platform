@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
@@ -35,6 +35,8 @@ class Settings(BaseSettings):
         default=60 * 24, alias="EMAIL_VERIFICATION_EXPIRE_MINUTES"
     )
     frontend_url: str = Field(default="http://localhost:5173", alias="FRONTEND_URL")
+    email_api_url: str = Field(default="https://api.smtp.bz/v1/smtp/send", alias="EMAIL_API_URL")
+    email_api_key: str = Field(default="", alias="EMAIL_API_KEY")
     cors_origins: str = Field(
         default="http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173",
         alias="CORS_ORIGINS",

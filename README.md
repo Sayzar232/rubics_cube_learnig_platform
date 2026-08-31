@@ -32,8 +32,18 @@
 | `SMTP_USE_TLS` / `SMTP_USE_SSL` | Режим шифрования |
 | `SMTP_USER` / `SMTP_PASSWORD` | Логин и пароль SMTP |
 | `SMTP_FROM` | Заголовок From |
+| `EMAIL_API_KEY` | API-ключ SMTP.BZ; если задан — отправка через HTTP API (приоритет над SMTP, работает на Render) |
+| `EMAIL_API_URL` | Endpoint API (по умолчанию `https://api.smtp.bz/v1/smtp/send`) |
 | `EMAIL_VERIFICATION_EXPIRE_MINUTES` | Срок жизни ссылки (по умолчанию 1440 мин = 24 ч) |
 | `FRONTEND_URL` | Базовый URL фронта для ссылки из письма |
+
+### Режим HTTP API SMTP.BZ (для Render и других платформ, где SMTP-порты закрыты)
+
+Если задана переменная `EMAIL_API_KEY`, письмо отправляется через HTTP API SMTP.BZ:
+`POST https://api.smtp.bz/v1/smtp/send` с заголовком `Authorization: <ключ>` (без `Bearer`) и JSON-телом
+(`from`, `to`, `subject`, `text`, `html`). SMTP-порты при этом не
+используются вовсе, поэтому Render.com такие запросы пропускает. Ключ создаётся в личном
+кабинете smtp.bz (раздел API). Без ключа используется классический SMTP, без обоих — dev-режим.
 
 Примеры SMTP: Gmail — `smtp.gmail.com:587` (+ пароль приложения), Яндекс — `smtp.yandex.ru:465`
 (SSL). Для локального тестирования удобен [Mailpit](https://github.com/axllent/mailpit):
