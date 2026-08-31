@@ -1,5 +1,6 @@
 ﻿<script setup>
 import { computed, onMounted, ref } from 'vue'
+import Landing from './Landing.vue'
 
 
 const page = ref('landing')
@@ -24,7 +25,6 @@ const filter = ref('OLL')
 const search = ref('')
 const showPassword = ref(false)
 const auth = ref({ username: '', email: '', password: '' })
-const heroColors = ['red', 'yellow', 'red', 'blue', 'yellow', 'green', 'orange', 'blue', 'green']
 
 const apiBaseUrl = import.meta.env.VITE_API_URL.replace(/\/$/, '')
 
@@ -256,33 +256,7 @@ onMounted(async () => {
     <div v-if="error" class="toast toast--error" @click="error = ''">{{ error }}</div>
 
     <!-- Landing page -->
-    <template v-if="page === 'landing'">
-      <header class="topbar landing-topbar">
-        <a class="brand" href="#/"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a>
-        <nav><a href="#/algorithms">Алгоритмы</a><a href="#/auth" class="button button--outline">Войти</a><a href="#/auth" class="button">Начать →</a></nav>
-      </header>
-      <main class="landing">
-        <section class="hero">
-          <div>
-            <span class="eyebrow">🏆 OLL &amp; PLL мастер-класс</span>
-            <h1>Собирай <em>кубик</em> <strong>Рубика</strong> как профи</h1>
-            <p>Изучай OLL и PLL алгоритмы с визуальными диаграммами, видеоуроками и системой отслеживания прогресса.</p>
-            <div class="hero-actions"><a href="#/learning" class="button button--large">Начать бесплатно →</a><a href="#/algorithms" class="button button--muted button--large">Смотреть алгоритмы</a></div>
-          </div>
-          <div class="hero-cube-wrap"><div class="hero-cube"> <i v-for="(color, index) in heroColors" :key="index" :class="color"/></div><b class="cube-note cube-note--top">PLL ready ✓</b><b class="cube-note cube-note--bottom">OLL ×57</b></div>
-        </section>
-        <section class="stat-banner"><div><b>57</b><span>OLL случаев</span></div><div><b>21</b><span>PLL случаев</span></div><div><b>78</b><span>всего алгоритмов</span></div><div><b>100%</b><span>бесплатно</span></div></section>
-        <section class="marketing-section"><h2>Всё, что нужно для мастерства</h2><div class="feature-grid">
-          <article class="feature yellow"><span/> <h3>57 OLL алгоритмов</h3><p>Все случаи ориентации последнего слоя с визуальными диаграммами и пошаговым разбором.</p></article>
-          <article class="feature blue"><span/> <h3>21 PLL алгоритм</h3><p>Каждая перестановка последнего слоя с понятной формулой и видеоразбором.</p></article>
-          <article class="feature red"><span/> <h3>Дневной стрик</h3><p>Отслеживай прогресс и зарабатывай достижения.</p></article>
-          <article class="feature green"><span/> <h3>Структурное обучение</h3><p>Алгоритмы идут по порядку: от первых шагов до уверенного CFOP.</p></article>
-        </div></section>
-        <section class="how"><h2>Как это работает</h2><div class="steps"><article><b>01</b><h3>Открой алгоритм</h3><p>Выбери OLL или PLL — без регистрации</p></article><article><b>02</b><h3>Изучи и практикуй</h3><p>Диаграмма, видео и практика</p></article><article><b>03</b><h3>Сохраняй прогресс</h3><p>Зарегистрируйся и отмечай выученные</p></article></div></section>
-        <section class="cta"><h2>Готов стать мастером?</h2><p>Все 78 алгоритмов доступны бесплатно — без регистрации.</p><a href="#/learning" class="button button--large">Начать изучение →</a></section>
-      </main>
-      <footer>© 2026 CubeLearn. Все права защищены.</footer>
-    </template>
+    <Landing v-if="page === 'landing'" />
 
     <!-- Auth page -->
     <section v-else-if="page === 'auth'" class="auth-page">
