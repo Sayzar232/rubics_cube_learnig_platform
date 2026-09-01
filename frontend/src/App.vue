@@ -267,7 +267,7 @@ onMounted(async () => {
             <p>Мы отправили письмо со ссылкой подтверждения на <strong>{{ pendingEmail }}</strong>. Откройте его и перейдите по ссылке — после этого вы сможете войти.</p>
             <p v-if="resendNotice">{{ resendNotice }}</p>
             <button class="button auth-submit" :disabled="resending">{{ resending ? 'Отправляем…' : 'Отправить письмо ещё раз' }}</button>
-            <p><button type="button" class="text-button" @click="verificationSent = false">← Изменить данные регистрации</button></p><a href="#/" class="back-link">← На главную</a>
+            <p><button type="button" class="text-button" @click="verificationSent = false"><AppIcon name="arrow-left" :size="14"/> Изменить данные регистрации</button></p><a href="#/" class="back-link"><AppIcon name="arrow-left" :size="14"/> На главную</a>
           </form>
         </template>
         <form v-else class="auth-form" @submit.prevent="submitAuth"><div class="auth-tabs"><button type="button" :class="{active: authMode === 'login'}" @click="setAuthMode('login')">Войти</button><button type="button" :class="{active: authMode === 'register'}" @click="setAuthMode('register')">Регистрация</button></div><h2>{{ authMode === 'login' ? 'С возвращением!' : 'Создать аккаунт' }}</h2>
@@ -277,7 +277,7 @@ onMounted(async () => {
           <button class="button auth-submit" :disabled="loading">{{ loading ? 'Подождите…' : authMode === 'login' ? 'Войти в аккаунт' : 'Создать аккаунт' }}</button>
           <p v-if="showResendHint"><button type="button" class="text-button" @click="resendVerification(auth.email)">{{ resending ? 'Отправляем…' : 'Не пришло письмо? Отправить ещё раз' }}</button></p>
           <p v-if="resendNotice">{{ resendNotice }}</p>
-          <p>{{ authMode === 'login' ? 'Нет аккаунта?' : 'Уже есть аккаунт?' }} <button type="button" class="text-button" @click="setAuthMode(authMode === 'login' ? 'register' : 'login')">{{ authMode === 'login' ? 'Зарегистрируйся' : 'Войди' }}</button></p><a href="#/" class="back-link">← На главную</a>
+          <p>{{ authMode === 'login' ? 'Нет аккаунта?' : 'Уже есть аккаунт?' }} <button type="button" class="text-button" @click="setAuthMode(authMode === 'login' ? 'register' : 'login')">{{ authMode === 'login' ? 'Зарегистрируйся' : 'Войди' }}</button></p><a href="#/" class="back-link"><AppIcon name="arrow-left" :size="14"/> На главную</a>
         </form>
       </div>
     </section>
@@ -291,7 +291,7 @@ onMounted(async () => {
             <p>Это займёт пару секунд.</p>
           </template>
           <template v-else-if="verificationState === 'success'">
-            <h2>Почта подтверждена ✔</h2>
+            <h2><AppIcon name="check" :size="18"/> Почта подтверждена</h2>
             <p>Перенаправляем вас в обучение…</p>
           </template>
           <template v-else>
@@ -309,10 +309,10 @@ onMounted(async () => {
         <a href="#/learning" class="brand sidebar-brand"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a>
         <nav class="side-nav">
           <a :class="{active: page === 'learning' || page === 'detail'}" href="#/learning">⌑ <span>Обучение</span></a>
-          <button @click="notice = 'Тренировка появится в следующей версии.'">◷ <span>Тренировка</span></button>
-          <a :class="{active: page === 'algorithms'}" href="#/algorithms">▦ <span>Алгоритмы</span></a>
-          <a :class="{active: page === 'profile'}" href="#/profile">♙ <span>Профиль</span></a>
-          <button @click="notice = 'Настройки будут доступны в следующей версии.'">⚙ <span>Настройки</span></button>
+          <button @click="notice = 'Тренировка появится в следующей версии.'"><AppIcon name="timer" :size="18"/> <span>Тренировка</span></button>
+          <a :class="{active: page === 'algorithms'}" href="#/algorithms"><AppIcon name="grid" :size="18"/> <span>Алгоритмы</span></a>
+          <a :class="{active: page === 'profile'}" href="#/profile"><AppIcon name="user" :size="18"/> <span>Профиль</span></a>
+          <button @click="notice = 'Настройки будут доступны в следующей версии.'"><AppIcon name="settings" :size="18"/> <span>Настройки</span></button>
         </nav>
         <div class="sidebar-user">
           <b>{{ initials }}</b>
@@ -324,7 +324,7 @@ onMounted(async () => {
           <a class="brand" href="#/learning"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a>
           <div v-if="user">
             <a href="#/profile" class="avatar">{{ initials }}</a>
-            <button class="button button--dark" @click="logout()">Выйти</button>
+            <button class="button button--dark" @click="logout()"><AppIcon name="log-out" :size="15"/> Выйти</button>
           </div>
           <div v-else>
             <a href="#/auth" class="button button--outline">Войти</a>
@@ -345,11 +345,11 @@ onMounted(async () => {
           <section v-else-if="page === 'algorithms'" class="page-container">
             <div class="page-heading">
               <div><h1>Алгоритмы</h1><p>Выбери случай и изучай его в удобном темпе.</p></div>
-              <button class="button" @click="openLearning">Продолжить обучение →</button>
+              <button class="button" @click="openLearning">Продолжить обучение <AppIcon name="arrow-right" :size="15"/></button>
             </div>
             <div class="catalog-controls"><div class="segmented"><button :class="{active: filter === 'OLL'}" @click="filter = 'OLL'">OLL</button><button :class="{active: filter === 'PLL'}" @click="filter = 'PLL'">PLL</button></div><input v-model="search" placeholder="Поиск алгоритма…" /></div>
             <div v-if="loading" class="empty">Загрузка…</div>
-            <div v-else class="algorithm-grid"><button v-for="algorithm in filteredAlgorithms" :key="algorithm.id" class="algorithm-card" :class="algorithm.category.toLowerCase()" @click="navigate(`/algorithms/${algorithm.id}`)"><span class="learned-mark" :class="{learned: algorithm.is_learned}">{{ algorithm.is_learned ? '✓ Изучен' : `${algorithm.category} #${algorithm.algorithm_number}` }}</span><CubeDiagram :algorithm="algorithm"/><h3>{{ algorithm.name }}</h3><code>{{ algorithm.formula }}</code></button></div>
+            <div v-else class="algorithm-grid"><button v-for="algorithm in filteredAlgorithms" :key="algorithm.id" class="algorithm-card" :class="algorithm.category.toLowerCase()" @click="navigate(`/algorithms/${algorithm.id}`)"><span class="learned-mark" :class="{learned: algorithm.is_learned}"><AppIcon v-if="algorithm.is_learned" name="check" :size="12"/> {{ algorithm.is_learned ? 'Изучен' : `${algorithm.category} #${algorithm.algorithm_number}` }}</span><CubeDiagram :algorithm="algorithm"/><h3>{{ algorithm.name }}</h3><code>{{ algorithm.formula }}</code></button></div>
             <div v-if="!loading && !filteredAlgorithms.length" class="empty">Алгоритмы не найдены.</div>
           </section>
 
@@ -364,11 +364,11 @@ onMounted(async () => {
           <section v-else-if="page === 'profile'" class="page-container profile profile-design">
             <!-- Guest profile: CTA to register -->
             <div v-if="!user" class="guest-profile-cta">
-              <div class="guest-profile-icon">?</div>
+              <div class="guest-profile-icon"><AppIcon name="user" :size="34"/></div>
               <h1>Вы просматриваете как гость</h1>
               <p>Зарегистрируйтесь, чтобы отслеживать прогресс, зарабатывать достижения и сохранять изученные алгоритмы.</p>
               <div class="guest-profile-actions">
-                <a href="#/auth" class="button button--large" @click="setAuthMode('register')">Создать аккаунт →</a>
+                <a href="#/auth" class="button button--large" @click="setAuthMode('register')">Создать аккаунт <AppIcon name="arrow-right" :size="15"/></a>
                 <a href="#/auth" class="button button--outline button--large">Уже есть аккаунт? Войти</a>
               </div>
               <div class="guest-features">
@@ -390,17 +390,17 @@ onMounted(async () => {
               </div>
               <section class="activity-card panel">
                 <h2>Активность (последние 14 дней)</h2>
-                <div class="activity-days"><span v-for="(day, index) in activityDays" :key="index" :class="{ active: day.active }" :title="`${day.dateStr}: ${day.active ? 'Были занятия' : 'Пропуск'}`">{{ day.active ? '✓' : '' }}</span><div class="activity-legend"><i/> занятие <i class="muted"/> пропуск</div></div>
+                <div class="activity-days"><span v-for="(day, index) in activityDays" :key="index" :class="{ active: day.active }" :title="`${day.dateStr}: ${day.active ? 'Были занятия' : 'Пропуск'}`"><AppIcon v-if="day.active" name="check" :size="13"/></span><div class="activity-legend"><i/> занятие <i class="muted"/> пропуск</div></div>
               </section>
               <section class="achievements-section panel">
                 <h2 class="achievements-title">🏅 Достижения</h2>
                 <div class="achievement-grid">
-                  <div class="achievement" :class="{unlocked: stats.learned_total >= 1}">🔥 <span><b>Первый алгоритм</b><small>Изучи свой первый алгоритм</small><em v-if="stats.learned_total >= 1">✓ Получено</em></span></div>
-                  <div class="achievement" :class="{unlocked: stats.learned_total >= 5}">⚡ <span><b>Быстрый старт</b><small>Изучи 5 алгоритмов</small><em v-if="stats.learned_total >= 5">✓ Получено</em></span></div>
-                  <div class="achievement" :class="{unlocked: stats.learned_total >= 10}">📚 <span><b>Усердный ученик</b><small>Изучи 10 алгоритмов</small><em v-if="stats.learned_total >= 10">✓ Получено</em></span></div>
-                  <div class="achievement" :class="{unlocked: stats.oll_total && stats.oll_learned === stats.oll_total}">🏆 <span><b>Мастер OLL</b><small>Изучи все OLL случаи</small><em v-if="stats.oll_total && stats.oll_learned === stats.oll_total">✓ Получено</em></span></div>
-                  <div class="achievement" :class="{unlocked: stats.pll_total && stats.pll_learned === stats.pll_total}">💎 <span><b>Чемпион PLL</b><small>Изучи все PLL случаи</small><em v-if="stats.pll_total && stats.pll_learned === stats.pll_total">✓ Получено</em></span></div>
-                  <div class="achievement" :class="{unlocked: streak >= 30}">🌟 <span><b>30-дневный стрик</b><small>Занимайся 30 дней подряд</small><em v-if="streak >= 30">✓ Получено</em></span></div>
+                  <div class="achievement" :class="{unlocked: stats.learned_total >= 1}">🔥 <span><b>Первый алгоритм</b><small>Изучи свой первый алгоритм</small><em v-if="stats.learned_total >= 1"><AppIcon name="check" :size="12"/> Получено</em></span></div>
+                  <div class="achievement" :class="{unlocked: stats.learned_total >= 5}">⚡ <span><b>Быстрый старт</b><small>Изучи 5 алгоритмов</small><em v-if="stats.learned_total >= 5"><AppIcon name="check" :size="12"/> Получено</em></span></div>
+                  <div class="achievement" :class="{unlocked: stats.learned_total >= 10}">📚 <span><b>Усердный ученик</b><small>Изучи 10 алгоритмов</small><em v-if="stats.learned_total >= 10"><AppIcon name="check" :size="12"/> Получено</em></span></div>
+                  <div class="achievement" :class="{unlocked: stats.oll_total && stats.oll_learned === stats.oll_total}">🏆 <span><b>Мастер OLL</b><small>Изучи все OLL случаи</small><em v-if="stats.oll_total && stats.oll_learned === stats.oll_total"><AppIcon name="check" :size="12"/> Получено</em></span></div>
+                  <div class="achievement" :class="{unlocked: stats.pll_total && stats.pll_learned === stats.pll_total}">💎 <span><b>Чемпион PLL</b><small>Изучи все PLL случаи</small><em v-if="stats.pll_total && stats.pll_learned === stats.pll_total"><AppIcon name="check" :size="12"/> Получено</em></span></div>
+                  <div class="achievement" :class="{unlocked: streak >= 30}">🌟 <span><b>30-дневный стрик</b><small>Занимайся 30 дней подряд</small><em v-if="streak >= 30"><AppIcon name="check" :size="12"/> Получено</em></span></div>
                 </div>
               </section>
             </template>
@@ -424,6 +424,36 @@ const STICKER_COLORS = Object.freeze({
   O: '#EE8800',
 })
 
+const ICONS = {
+  book: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  timer: '<line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/>',
+  grid: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  settings: '<line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/>',
+  bulb: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+  target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  repeat: '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+  eye: '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+  flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+  gem: '<path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/>',
+  star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+  chart: '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+  award: '<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  'arrow-right': '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  'arrow-left': '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+  play: '<polygon points="6 3 20 12 6 21 6 3"/>',
+  mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+  'log-out': '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>',
+}
+
+const AppIcon = {
+  props: { name: { type: String, required: true }, size: { type: [Number, String], default: 18 } },
+  computed: { html() { return ICONS[this.name] || '' } },
+  template: '<svg class="icon" :width="size" :height="size" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" v-html="html"></svg>',
+}
 const CubeDiagram = {
   props: ['algorithm'],
   computed: {
@@ -457,7 +487,7 @@ const ProgressBar = {
 }
 
 const AlgorithmDetail = {
-  components: { ProgressBar, CubeDiagram },
+  components: { ProgressBar, CubeDiagram, AppIcon },
   props: ['algorithm', 'stats', 'loading'],
   emits: ['complete', 'next', 'catalog'],
   computed: {
@@ -481,8 +511,8 @@ const AlgorithmDetail = {
       } catch { return null }
     },
   },
-  template: `<div class="detail"><div class="detail-heading"><div><button class="back-link" @click="$emit('catalog')">← К каталогу</button><h1>{{ algorithm.category }} #{{ algorithm.algorithm_number }} — {{ algorithm.name }}</h1><p>{{ stats.learned_total }} из {{ stats.total_algorithms }} изучено</p></div><button class="button button--dark" @click="$emit('next')">Следующий →</button></div><div class="detail-progress"><i :style="{ width: stats.overall_percentage + '%' }"/></div><div class="detail-grid"><section><div class="diagram-card" :class="isOll ? 'oll' : 'pll'"><CubeDiagram :algorithm="algorithm"/><span>{{ algorithm.category }} · вид сверху</span></div><div class="formula-card"><small>АЛГОРИТМ</small><div><code v-for="(move, index) in algorithm.formula.split(' ')" :key="index">{{ move }}</code></div><button v-if="!algorithm.is_learned" class="master-button" :disabled="loading" @click="$emit('complete')">{{ loading ? 'Сохраняем…' : '✓ Отметить как выученный' }}</button><p v-else class="mastered">✓ Алгоритм изучен</p></div></section><section><div class="video-card"><iframe v-if="embedUrl" class="video-player" :src="embedUrl" :title="algorithm.name + ' — видеоурок'" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"/><a v-else-if="algorithm.video_url" :href="algorithm.video_url" target="_blank" rel="noreferrer" class="video-link"><span>▶</span><b>{{ algorithm.name }} — видеоурок</b><small>Открыть видео</small></a><div v-else class="video-placeholder"><span>▶</span><b>{{ algorithm.name }} — видеоурок</b><small>Видео будет добавлено позже</small></div></div><div class="tips"><h2>💡 Советы по запоминанию</h2><p>🎯 Разбей алгоритм на блоки по 3–4 хода.</p><p>🔁 Повтори 10 раз медленно, затем ускоряйся.</p><p>👁️ Запомни визуальный паттерн случая.</p></div></section></div></div>`,
+  template: `<div class="detail"><div class="detail-heading"><div><button class="back-link" @click="$emit('catalog')"><AppIcon name="arrow-left" :size="14"/> К каталогу</button><h1>{{ algorithm.category }} #{{ algorithm.algorithm_number }} — {{ algorithm.name }}</h1><p>{{ stats.learned_total }} из {{ stats.total_algorithms }} изучено</p></div><button class="button button--dark" @click="$emit('next')">Следующий <AppIcon name="arrow-right" :size="15"/></button></div><div class="detail-progress"><i :style="{ width: stats.overall_percentage + '%' }"/></div><div class="detail-grid"><section><div class="diagram-card" :class="isOll ? 'oll' : 'pll'"><CubeDiagram :algorithm="algorithm"/><span>{{ algorithm.category }} · вид сверху</span></div><div class="formula-card"><small>АЛГОРИТМ</small><div><code v-for="(move, index) in algorithm.formula.split(' ')" :key="index">{{ move }}</code></div><button v-if="!algorithm.is_learned" class="master-button" :disabled="loading" @click="$emit('complete')"><AppIcon v-if="!loading" name="check" :size="16"/> {{ loading ? 'Сохраняем…' : 'Отметить как выученный' }}</button><p v-else class="mastered"><AppIcon name="check" :size="15"/> Алгоритм изучен</p></div></section><section><div class="video-card"><iframe v-if="embedUrl" class="video-player" :src="embedUrl" :title="algorithm.name + ' — видеоурок'" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"/><a v-else-if="algorithm.video_url" :href="algorithm.video_url" target="_blank" rel="noreferrer" class="video-link"><span class="video-glyph"><AppIcon name="play" :size="20"/></span><b>{{ algorithm.name }} — видеоурок</b><small>Открыть видео</small></a><div v-else class="video-placeholder"><span class="video-glyph"><AppIcon name="play" :size="20"/></span><b>{{ algorithm.name }} — видеоурок</b><small>Видео будет добавлено позже</small></div></div><div class="tips"><h2>💡 Советы по запоминанию</h2><p>🎯 Разбей алгоритм на блоки по 3–4 хода.</p><p>🔁 Повтори 10 раз медленно, затем ускоряйся.</p><p>👁️ Запомни визуальный паттерн случая.</p></div></section></div></div>`,
 }
 
-export default { components: { AlgorithmDetail, CubeDiagram, ProgressBar } }
+export default { components: { AlgorithmDetail, CubeDiagram, ProgressBar, AppIcon } }
 </script>
