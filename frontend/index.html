@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
@@ -6,13 +6,98 @@
     <title>CubeLearn — обучение скоростной сборки кубика Рубика · Метод CFOP</title>
     <meta name="description" content="Онлайн-платформа для изучения скоростной сборки кубика Рубика методом CFOP: 57 алгоритмов OLL и 21 PLL с диаграммами, видеоуроками и отслеживанием прогресса." />
     <meta name="theme-color" content="#2563eb" />
+    <link rel="canonical" href="https://cubelearn.site/" />
+
+    <!-- Open Graph -->
+    <meta property="og:site_name" content="CubeLearn" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://cubelearn.site/" />
+    <meta property="og:title" content="CubeLearn — обучение скоростной сборки кубика Рубика · Метод CFOP" />
+    <meta property="og:description" content="Онлайн-платформа для изучения скоростной сборки кубика Рубика методом CFOP: 57 алгоритмов OLL и 21 PLL с диаграммами, видеоуроками и отслеживанием прогресса." />
+    <meta property="og:image" content="https://cubelearn.site/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="ru_RU" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="CubeLearn — обучение скоростной сборки кубика Рубика · Метод CFOP" />
+    <meta name="twitter:description" content="Онлайн-платформа для изучения скоростной сборки кубика Рубика методом CFOP: 57 алгоритмов OLL и 21 PLL с диаграммами, видеоуроками и отслеживанием прогресса." />
+    <meta name="twitter:image" content="https://cubelearn.site/og-image.png" />
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "name": "CubeLearn",
+          "url": "https://cubelearn.site/",
+          "description": "Онлайн-платформа для изучения скоростной сборки кубика Рубика методом CFOP",
+          "inLanguage": "ru"
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Я собираю только новичковым методом. Мне подойдёт?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Да. Начните с простых случаев OLL и PLL — для каждого есть диаграмма и видеоурок. Порог входа — умение собирать куб любым способом. Дальше вы плавно перейдёте к полному набору алгоритмов без резкого скачка сложности."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Сколько времени займёт освоение CFOP?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "При 30–45 минутах практики в день базовый набор — 2-look OLL и PLL — вы освоите за 4–6 недель. Полный набор из 78 алгоритмов обычно занимает от 3 до 6 месяцев спокойной работы."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Нужно ли сразу учить все 78 алгоритмов?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Нет. Начните с интуиции и 2-look алгоритмов — они дают время около суб-40 без заучивания. Полные наборы OLL и PLL добавляйте по мере роста скорости, а каталог поможет не запутаться, что уже выучено."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Что понадобится для обучения?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Только куб 3×3 и браузер. Алгоритмы открываются с любого устройства, а прогресс синхронизируется с аккаунтом."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Обязательно ли регистрироваться?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Смотреть алгоритмы можно без регистрации. Аккаунт нужен, чтобы отмечать выученные алгоритмы, копить дневной стрик, получать достижения и видеть статистику по OLL и PLL."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   </head>
   <body>
-    <div id="app"></div>
+    <!--
+      Статический контент лендинга для поисковых роботов (SPA не исполняет JS при индексации).
+      При сборке сюда автоматически подставляется содержимое src/landing-body.html (Vite-плагин injectLanding в vite.config.js).
+      При монтировании Vue заменяет этот контент разметкой Landing.vue.
+    -->
+    <div id="app"><!--LANDING_CONTENT--></div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
