@@ -5,6 +5,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .api.router import api_router
 from .core.config import get_settings
@@ -32,5 +33,24 @@ def healthcheck() -> dict[str, str]:
 
 
 frontend_dir = Path(settings.frontend_dir)
+
+
+class SPAStaticFiles(StaticFiles):
+    """StaticFiles с fallback на index.html: позволяет открывать глубокие ссылки
+    History API (/learning, /algorithms, /verify?token=...) напрямую из браузера."""
+
+    async def get_response(self, path: str, scope):
+        try:
+            response = await super().get_response(path, scope)
+        except StarletteHTTPException as exc:
+            # StaticFiles бросает 404, если файла нет (и нет 404.html)
+            if exc.status_code == 404 and not path.startswith("api"):
+                return await super().get_response("index.html", scope)
+            raise
+        if response.status_code == 404 and not path.startswith("api"):
+            return await super().get_response("index.html", scope)
+        return response
+
+
 if frontend_dir.exists():
-    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+    app.mount("/", SPAStaticFiles(directory=frontend_dir, html=True), name="frontend")

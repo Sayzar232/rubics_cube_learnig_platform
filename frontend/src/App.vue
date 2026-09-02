@@ -40,8 +40,17 @@ const api = async (url, options = {}) => {
   return body
 }
 
-const route = () => window.location.hash.replace(/^#/, '') || '/'
-const navigate = (path) => { window.location.hash = path }
+const route = () => {
+  const { pathname, search, hash } = window.location
+  // Legacy-поддержка старых hash-ссылок (#/verify?token=... из писем, закладки)
+  if (hash.startsWith('#/')) return hash.slice(1)
+  return pathname + search || '/'
+}
+const navigate = (path) => {
+  history.pushState({}, '', path)
+  window.scrollTo(0, 0)
+  consumeRoute()
+}
 const initials = computed(() => user.value?.username?.slice(0, 2).toUpperCase() || '?')
 const stats = computed(() => progress.value?.statistics || {
   oll_learned: 0, oll_total: 57, pll_learned: 0, pll_total: 21, learned_total: 0, total_algorithms: 78, overall_percentage: 0,
@@ -243,8 +252,29 @@ function openLearning() {
   navigate('/learning')
 }
 
+/**
+ * Перехват кликов по внутренним ссылкам (<a href="/..."> и legacy <a href="#/...">),
+ * чтобы навигация выполнялась через History API без полной перезагрузки страницы.
+ * Якоря (#stages) и внешние ссылки обрабатываются браузером как обычно.
+ */
+function onDocumentClick(event) {
+  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+  const link = event.target instanceof Element ? event.target.closest('a') : null
+  if (!link || link.target === '_blank' || link.hasAttribute('download')) return
+  const href = link.getAttribute('href') || ''
+  let path = null
+  if (href.startsWith('/')) path = href
+  else if (href.startsWith('#/')) path = href.slice(1)
+  else return
+  event.preventDefault()
+  navigate(path)
+}
+
 onMounted(async () => {
-  window.addEventListener('hashchange', consumeRoute)
+  document.addEventListener('click', onDocumentClick)
+  window.addEventListener('popstate', consumeRoute)
+  // Нормализуем legacy hash-URL (#/learning -> /learning) без перезагрузки
+  if (window.location.hash.startsWith('#/')) history.replaceState({}, '', window.location.hash.slice(1))
   try { user.value = await api('/auth/me'); await refreshData() } catch { user.value = null }
   consumeRoute()
 })
@@ -267,7 +297,7 @@ onMounted(async () => {
             <p>Мы отправили письмо со ссылкой подтверждения на <strong>{{ pendingEmail }}</strong>. Откройте его и перейдите по ссылке — после этого вы сможете войти.</p>
             <p v-if="resendNotice">{{ resendNotice }}</p>
             <button class="button auth-submit" :disabled="resending">{{ resending ? 'Отправляем…' : 'Отправить письмо ещё раз' }}</button>
-            <p><button type="button" class="text-button" @click="verificationSent = false"><AppIcon name="arrow-left" :size="14"/> Изменить данные регистрации</button></p><a href="#/" class="back-link"><AppIcon name="arrow-left" :size="14"/> На главную</a>
+            <p><button type="button" class="text-button" @click="verificationSent = false"><AppIcon name="arrow-left" :size="14"/> Изменить данные регистрации</button></p><a href="/" class="back-link"><AppIcon name="arrow-left" :size="14"/> На главную</a>
           </form>
         </template>
         <form v-else class="auth-form" @submit.prevent="submitAuth"><div class="auth-tabs"><button type="button" :class="{active: authMode === 'login'}" @click="setAuthMode('login')">Войти</button><button type="button" :class="{active: authMode === 'register'}" @click="setAuthMode('register')">Регистрация</button></div><h2>{{ authMode === 'login' ? 'С возвращением!' : 'Создать аккаунт' }}</h2>
@@ -277,7 +307,7 @@ onMounted(async () => {
           <button class="button auth-submit" :disabled="loading">{{ loading ? 'Подождите…' : authMode === 'login' ? 'Войти в аккаунт' : 'Создать аккаунт' }}</button>
           <p v-if="showResendHint"><button type="button" class="text-button" @click="resendVerification(auth.email)">{{ resending ? 'Отправляем…' : 'Не пришло письмо? Отправить ещё раз' }}</button></p>
           <p v-if="resendNotice">{{ resendNotice }}</p>
-          <p>{{ authMode === 'login' ? 'Нет аккаунта?' : 'Уже есть аккаунт?' }} <button type="button" class="text-button" @click="setAuthMode(authMode === 'login' ? 'register' : 'login')">{{ authMode === 'login' ? 'Зарегистрируйся' : 'Войди' }}</button></p><a href="#/" class="back-link"><AppIcon name="arrow-left" :size="14"/> На главную</a>
+          <p>{{ authMode === 'login' ? 'Нет аккаунта?' : 'Уже есть аккаунт?' }} <button type="button" class="text-button" @click="setAuthMode(authMode === 'login' ? 'register' : 'login')">{{ authMode === 'login' ? 'Зарегистрируйся' : 'Войди' }}</button></p><a href="/" class="back-link"><AppIcon name="arrow-left" :size="14"/> На главную</a>
         </form>
       </div>
     </section>
@@ -297,7 +327,7 @@ onMounted(async () => {
           <template v-else>
             <h2>Не удалось подтвердить почту</h2>
             <p>{{ verificationMessage || 'Ссылка недействительна или срок её действия истёк.' }}</p>
-            <a href="#/auth" class="button auth-submit">Войти или зарегистрироваться</a>
+            <a href="/auth" class="button auth-submit">Войти или зарегистрироваться</a>
           </template>
         </div>
       </div>
@@ -306,12 +336,12 @@ onMounted(async () => {
     <!-- App shell — ALL other pages, for both guests and logged-in users -->
     <div v-else class="app-shell">
       <aside class="sidebar">
-        <a href="#/learning" class="brand sidebar-brand"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a>
+        <a href="/learning" class="brand sidebar-brand"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a>
         <nav class="side-nav">
-          <a :class="{active: page === 'learning' || page === 'detail'}" href="#/learning">⌑ <span>Обучение</span></a>
+          <a :class="{active: page === 'learning' || page === 'detail'}" href="/learning">⌑ <span>Обучение</span></a>
           <button @click="notice = 'Тренировка появится в следующей версии.'"><AppIcon name="timer" :size="18"/> <span>Тренировка</span></button>
-          <a :class="{active: page === 'algorithms'}" href="#/algorithms"><AppIcon name="grid" :size="18"/> <span>Алгоритмы</span></a>
-          <a :class="{active: page === 'profile'}" href="#/profile"><AppIcon name="user" :size="18"/> <span>Профиль</span></a>
+          <a :class="{active: page === 'algorithms'}" href="/algorithms"><AppIcon name="grid" :size="18"/> <span>Алгоритмы</span></a>
+          <a :class="{active: page === 'profile'}" href="/profile"><AppIcon name="user" :size="18"/> <span>Профиль</span></a>
           <button @click="notice = 'Настройки будут доступны в следующей версии.'"><AppIcon name="settings" :size="18"/> <span>Настройки</span></button>
         </nav>
         <div class="sidebar-user">
@@ -321,14 +351,14 @@ onMounted(async () => {
       </aside>
       <div class="workspace">
         <header class="topbar app-topbar">
-          <a class="brand" href="#/learning"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a>
+          <a class="brand" href="/learning"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a>
           <div v-if="user">
-            <a href="#/profile" class="avatar">{{ initials }}</a>
+            <a href="/profile" class="avatar">{{ initials }}</a>
             <button class="button button--dark" @click="logout()"><AppIcon name="log-out" :size="15"/> Выйти</button>
           </div>
           <div v-else>
-            <a href="#/auth" class="button button--outline">Войти</a>
-            <a href="#/auth" class="button" @click="setAuthMode('register')">Регистрация</a>
+            <a href="/auth" class="button button--outline">Войти</a>
+            <a href="/auth" class="button" @click="setAuthMode('register')">Регистрация</a>
           </div>
         </header>
         <main class="app-main">
@@ -336,8 +366,8 @@ onMounted(async () => {
           <!-- Learning page -->
           <section v-if="page === 'learning'" class="page-container">
             <div v-if="loading || !dataLoaded" class="empty"><h1>Загружаем алгоритмы…</h1><p>Получаем алгоритмы для изучения.</p></div>
-            <div v-else-if="!algorithms.length" class="empty"><h1>Каталог пока пуст</h1><p>В базе нет алгоритмов. Запустите seed-парсер бэкенда и обновите страницу.</p><a href="#/algorithms" class="button">Открыть каталог</a></div>
-            <div v-else-if="!currentAlgorithm" class="empty"><h1>Все алгоритмы изучены! 🎉</h1><p>Отличная работа — загляните в каталог для повторения.</p><a href="#/algorithms" class="button">Каталог алгоритмов</a></div>
+            <div v-else-if="!algorithms.length" class="empty"><h1>Каталог пока пуст</h1><p>В базе нет алгоритмов. Запустите seed-парсер бэкенда и обновите страницу.</p><a href="/algorithms" class="button">Открыть каталог</a></div>
+            <div v-else-if="!currentAlgorithm" class="empty"><h1>Все алгоритмы изучены! 🎉</h1><p>Отличная работа — загляните в каталог для повторения.</p><a href="/algorithms" class="button">Каталог алгоритмов</a></div>
             <AlgorithmDetail v-else :algorithm="currentAlgorithm" :stats="stats" :loading="loading" @complete="markLearned" @next="openLearning" @catalog="navigate('/algorithms')" />
           </section>
 
@@ -368,8 +398,8 @@ onMounted(async () => {
               <h1>Вы просматриваете как гость</h1>
               <p>Зарегистрируйтесь, чтобы отслеживать прогресс, зарабатывать достижения и сохранять изученные алгоритмы.</p>
               <div class="guest-profile-actions">
-                <a href="#/auth" class="button button--large" @click="setAuthMode('register')">Создать аккаунт <AppIcon name="arrow-right" :size="15"/></a>
-                <a href="#/auth" class="button button--outline button--large">Уже есть аккаунт? Войти</a>
+                <a href="/auth" class="button button--large" @click="setAuthMode('register')">Создать аккаунт <AppIcon name="arrow-right" :size="15"/></a>
+                <a href="/auth" class="button button--outline button--large">Уже есть аккаунт? Войти</a>
               </div>
               <div class="guest-features">
                 <div class="guest-feature"><span>📊</span><b>Прогресс</b><small>Отмечай выученные алгоритмы</small></div>

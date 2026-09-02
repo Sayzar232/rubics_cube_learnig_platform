@@ -53,7 +53,7 @@ def schedule_verification_email(
     """Ставит в очередь фоновую отправку письма со ссылкой подтверждения."""
     token = create_email_verification_token(str(user_id))
     base_url = settings.frontend_url.rstrip("/")
-    verification_url = f"{base_url}/#/verify?token={token}"
+    verification_url = f"{base_url}/verify?token={token}"
     background_tasks.add_task(
         send_verification_email,
         to_email=to_email,
