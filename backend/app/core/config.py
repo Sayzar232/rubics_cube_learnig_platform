@@ -35,6 +35,8 @@ class Settings(BaseSettings):
         default=60 * 24, alias="EMAIL_VERIFICATION_EXPIRE_MINUTES"
     )
     frontend_url: str = Field(default="http://localhost:5173", alias="FRONTEND_URL")
+    # Канонический публичный адрес сайта: используется в canonical, og:url, JSON-LD и sitemap.
+    site_url: str = Field(default="https://cubelearn.site", alias="SITE_URL")
     email_api_url: str = Field(default="https://api.smtp.bz/v1/smtp/send", alias="EMAIL_API_URL")
     email_api_key: str = Field(default="", alias="EMAIL_API_KEY")
     cors_origins: str = Field(

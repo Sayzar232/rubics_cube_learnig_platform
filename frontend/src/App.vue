@@ -28,6 +28,73 @@ const auth = ref({ username: '', email: '', password: '' })
 
 const apiBaseUrl = import.meta.env.VITE_API_URL.replace(/\/$/, '')
 
+// --- SEO: уникальные title/description/canonical/og для каждого маршрута ----
+const SITE_URL = 'https://cubelearn.site'
+const PAGE_META = {
+  landing: {
+    title: 'CubeLearn — обучение скоростной сборки кубика Рубика · Метод CFOP',
+    description: 'Онлайн-платформа для изучения скоростной сборки кубика Рубика методом CFOP: 57 алгоритмов OLL и 21 PLL с диаграммами, видеоуроками и отслеживанием прогресса.',
+    path: '/',
+  },
+  algorithms: {
+    title: 'Каталог алгоритмов CFOP — все 57 OLL и 21 PLL с формулами · CubeLearn',
+    description: 'Полный каталог алгоритмов метода CFOP: 57 случаев OLL и 21 случай PLL с формулами, схемами и видеоуроками. Бесплатно, на русском языке.',
+    path: '/algorithms',
+  },
+  detail: {
+    title: 'Алгоритм CFOP: формула, схема и видеоурок · CubeLearn',
+    description: 'Формула, диаграмма случая и видеоурок алгоритма CFOP. Изучайте OLL и PLL на CubeLearn.',
+    path: '/algorithms',
+  },
+  learning: {
+    title: 'Режим обучения CFOP — учите алгоритмы по одному · CubeLearn',
+    description: 'Тренажёр подбирает следующий алгоритм OLL или PLL, показывает диаграмму, формулу и видеоурок. Отмечайте прогресс и копите стрик — бесплатно.',
+    path: '/learning',
+  },
+  auth: {
+    title: 'Вход и регистрация · CubeLearn',
+    description: 'Создайте бесплатный аккаунт CubeLearn, чтобы отслеживать прогресс изучения алгоритмов CFOP.',
+    path: '/auth',
+    robots: 'noindex, follow',
+  },
+  profile: {
+    title: 'Профиль и прогресс · CubeLearn',
+    description: 'Личный кабинет CubeLearn: прогресс по OLL и PLL, достижения и статистика.',
+    path: '/profile',
+    robots: 'noindex, follow',
+  },
+  verify: {
+    title: 'Подтверждение почты · CubeLearn',
+    description: 'Подтверждение email-адреса аккаунта CubeLearn.',
+    path: '/verify',
+    robots: 'noindex, follow',
+  },
+}
+
+function applyPageMeta(meta) {
+  if (!meta) return
+  const setAttr = (selector, attribute, value) => {
+    const element = document.head.querySelector(selector)
+    if (element) element.setAttribute(attribute, value)
+    return element
+  }
+  document.title = meta.title
+  setAttr('meta[name="description"]', 'content', meta.description)
+  setAttr('meta[property="og:title"]', 'content', meta.title)
+  setAttr('meta[property="og:description"]', 'content', meta.description)
+  setAttr('meta[property="og:url"]', 'content', SITE_URL + meta.path)
+  setAttr('meta[name="twitter:title"]', 'content', meta.title)
+  setAttr('meta[name="twitter:description"]', 'content', meta.description)
+  setAttr('link[rel="canonical"]', 'href', SITE_URL + meta.path)
+  const robotsValue = meta.robots || 'index, follow'
+  if (!setAttr('meta[name="robots"]', 'content', robotsValue)) {
+    const element = document.createElement('meta')
+    element.setAttribute('name', 'robots')
+    element.setAttribute('content', robotsValue)
+    document.head.appendChild(element)
+  }
+}
+
 const api = async (url, options = {}) => {
   const response = await fetch(`${apiBaseUrl}/api${url}`, {
     credentials: 'include',
@@ -110,6 +177,8 @@ function consumeRoute() {
   }
   else navigate('/')
 
+  applyPageMeta(PAGE_META[page.value])
+
   // All pages are accessible without auth.
   // Data loading: if logged in, use full refreshData(); otherwise load public algorithms list.
   if (page.value === 'learning') {
@@ -157,7 +226,17 @@ async function loadPublicAlgorithms() {
 
 async function loadAlgorithm(id) {
   loading.value = true
-  try { currentAlgorithm.value = await api(`/algorithms/${id}`) }
+  try {
+    currentAlgorithm.value = await api(`/algorithms/${id}`)
+    const algorithm = currentAlgorithm.value
+    if (algorithm) {
+      applyPageMeta({
+        title: `${algorithm.category} #${String(algorithm.algorithm_number).padStart(2, '0')} — ${algorithm.name}: формула, схема и видеоурок · CubeLearn`,
+        description: `Алгоритм ${algorithm.category} #${String(algorithm.algorithm_number).padStart(2, '0')} — ${algorithm.name} (группа ${algorithm.group}): формула ${algorithm.formula}, диаграмма случая и видеоурок. Изучайте CFOP на CubeLearn.`,
+        path: `/algorithms/${algorithm.id}`,
+      })
+    }
+  }
   catch (err) { error.value = err.message; navigate('/algorithms') }
   finally { loading.value = false }
 }
