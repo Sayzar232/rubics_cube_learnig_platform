@@ -55,15 +55,7 @@ code{font-family:'JetBrains Mono',ui-monospace,Consolas,monospace}
 
 /* ===== Brand ===== */
 .brand{display:inline-flex;align-items:center;gap:9px;font-size:19px;font-weight:800;white-space:nowrap;letter-spacing:-.02em}
-.cube-logo{display:grid;grid-template-columns:repeat(3,8px);gap:1.5px;border:1.5px solid rgba(11,18,32,.14);border-radius:5px;overflow:hidden;padding:2px;background:#fff}
-.cube-logo i{height:8px;border-radius:1px}
-.cube-logo i:nth-child(1){background:#ef4444}
-.cube-logo i:nth-child(2){background:#fbbf24}
-.cube-logo i:nth-child(3){background:#f97316}
-.cube-logo i:nth-child(4){background:#22c55e}
-.cube-logo i:nth-child(5){background:#3b82f6}
-.cube-logo i:nth-child(6){background:#f1f5f9}
-.cube-logo i:nth-child(n+7){display:none}
+.logo-mark{width:30px;height:30px;flex-shrink:0}
 
 /* ===== Topbar ===== */
 .topbar{height:64px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 48px;position:sticky;top:0;z-index:10}
@@ -242,7 +234,7 @@ code{font-family:'JetBrains Mono',ui-monospace,Consolas,monospace}
   .algorithm-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .sidebar{width:64px;padding:19px 8px}
   .sidebar .brand{padding:0 7px 22px;gap:0;font-size:0}
-  .sidebar .brand .cube-logo{transform:scale(1.05)}
+  .sidebar .brand .logo-mark{transform:scale(1.05)}
   .side-nav span,.sidebar-user span{font-size:0}
   .side-nav a,.side-nav button{justify-content:center;padding:12px;gap:0}
   .sidebar-user{justify-content:center;padding:18px 4px 0}

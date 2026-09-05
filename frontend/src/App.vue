@@ -290,7 +290,7 @@ onMounted(async () => {
 
     <!-- Auth page -->
     <section v-else-if="page === 'auth'" class="auth-page">
-      <div class="auth-card"><aside class="auth-aside"><a class="brand"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a><div><h1>Стань мастером кубика Рубика</h1><p>Изучай OLL и PLL алгоритмы с профессиональными диаграммами и видеоуроками.</p></div></aside>
+      <div class="auth-card"><aside class="auth-aside"><a class="brand"><svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><polygon points="16 2.5 29 10 16 17.5 3 10" fill="#fbbf24"/><polygon points="3 10 16 17.5 16 30 3 22.5" fill="#ef4444"/><polygon points="29 10 16 17.5 16 30 29 22.5" fill="#3b82f6"/></svg>CubeLearn</a><div><h1>Стань мастером кубика Рубика</h1><p>Изучай OLL и PLL алгоритмы с профессиональными диаграммами и видеоуроками.</p></div></aside>
         <template v-if="verificationSent && authMode === 'register'">
           <form class="auth-form" @submit.prevent="resendVerification(pendingEmail)">
             <h2>Почти готово! Проверьте ящик 📬</h2>
@@ -314,7 +314,7 @@ onMounted(async () => {
 
     <!-- Email verification -->
     <section v-else-if="page === 'verify'" class="auth-page">
-      <div class="auth-card"><aside class="auth-aside"><a class="brand"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a><div><h1>Подтверждение почты</h1><p>Проверяем вашу ссылку.</p></div></aside>
+      <div class="auth-card"><aside class="auth-aside"><a class="brand"><svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><polygon points="16 2.5 29 10 16 17.5 3 10" fill="#fbbf24"/><polygon points="3 10 16 17.5 16 30 3 22.5" fill="#ef4444"/><polygon points="29 10 16 17.5 16 30 29 22.5" fill="#3b82f6"/></svg>CubeLearn</a><div><h1>Подтверждение почты</h1><p>Проверяем вашу ссылку.</p></div></aside>
         <div class="auth-form">
           <template v-if="verificationState === 'verifying'">
             <h2>Подтверждаем почту…</h2>
@@ -336,7 +336,7 @@ onMounted(async () => {
     <!-- App shell — ALL other pages, for both guests and logged-in users -->
     <div v-else class="app-shell">
       <aside class="sidebar">
-        <a href="/learning" class="brand sidebar-brand"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a>
+        <a href="/learning" class="brand sidebar-brand"><svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><polygon points="16 2.5 29 10 16 17.5 3 10" fill="#fbbf24"/><polygon points="3 10 16 17.5 16 30 3 22.5" fill="#ef4444"/><polygon points="29 10 16 17.5 16 30 29 22.5" fill="#3b82f6"/></svg>CubeLearn</a>
         <nav class="side-nav">
           <a :class="{active: page === 'learning' || page === 'detail'}" href="/learning">⌑ <span>Обучение</span></a>
           <button @click="notice = 'Тренировка появится в следующей версии.'"><AppIcon name="timer" :size="18"/> <span>Тренировка</span></button>
@@ -351,7 +351,7 @@ onMounted(async () => {
       </aside>
       <div class="workspace">
         <header class="topbar app-topbar">
-          <a class="brand" href="/learning"><span class="cube-logo"><i/><i/><i/><i/><i/><i/></span>CubeLearn</a>
+          <a class="brand" href="/learning"><svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><polygon points="16 2.5 29 10 16 17.5 3 10" fill="#fbbf24"/><polygon points="3 10 16 17.5 16 30 3 22.5" fill="#ef4444"/><polygon points="29 10 16 17.5 16 30 29 22.5" fill="#3b82f6"/></svg>CubeLearn</a>
           <div v-if="user">
             <a href="/profile" class="avatar">{{ initials }}</a>
             <button class="button button--dark" @click="logout()"><AppIcon name="log-out" :size="15"/> Выйти</button>
