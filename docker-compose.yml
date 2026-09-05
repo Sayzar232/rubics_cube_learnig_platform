@@ -34,7 +34,7 @@
       - "8000:8000"
     volumes:
       - ./backend:/app
-      - ./frontend:/frontend
+      - ./frontend:/app/frontend
 
 volumes:
   postgres_data:

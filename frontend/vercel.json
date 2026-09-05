@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/sitemap.xml", "destination": "https://api.cubelearn.site/sitemap.xml" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
