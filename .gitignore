@@ -41,7 +41,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 frontend/public/assets/algorithms/
-frontend/dist/
+frontend/dist/assets/algorithms/
+# frontend/dist больше НЕ игнорируем: dist коммитится в репозиторий,
+# чтобы Render-деплой бэкенда видел frontend/dist и монтировал SPAStaticFiles
+# (серверная SEO-отрисовка /learning, /algorithms и т.д.).
 
 
 # IDE / OS

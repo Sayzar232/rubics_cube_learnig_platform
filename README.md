@@ -84,3 +84,26 @@ npm run build
 ```
 
 После этого FastAPI будет раздавать собранный фронтенд из `frontend/dist`.
+После этого FastAPI будет раздавать собранный фронтенд из `frontend/dist`.
+
+## Прод-маршрутизация (Vercel + Render)
+
+Архитектура: `cubelearn.site` — статика на Vercel, `api.cubelearn.site` — FastAPI на Render.
+
+Чтобы запросы к `https://cubelearn.site/learning`, `/algorithms`, `/auth`, `/profile`,
+`/verify` и `/algorithms/:id` отдавали **серверной отрисованный HTML** с уникальными
+SEO-мета (а не одинаковый `index.html` лендинга), в `frontend/vercel.json` эти пути
+проксируются реврайтами на `https://api.cubelearn.site/...`, где `SPAStaticFiles`
++ `render_spa_html` возвращают полноценный SPA-HTML. Остальные неизвестные пути
+без точки уходят на `/index.html` (catch-all), а бэкенд отвечает честным 404.
+
+Требования к деплою:
+
+1. **Render (бэкенд)**: в репозитории должен быть закоммичен `frontend/dist/`
+   (он больше не в `.gitignore`). При старте `main.py` монтирует `SPAStaticFiles`
+   только если `frontend/dist` существует — иначе все SPA-пути вернут 404.
+   После изменения фронтенда не забудьте `npm run build` и закоммитить новый `dist`.
+2. **Vercel (фронтенд)**: реврайты берутся из `frontend/vercel.json`; после
+   деплоя проверка: `curl -I https://cubelearn.site/learning` должен отвечать
+   бэкенд (не `Server: Vercel`), а в HTML — title «Режим обучения CFOP…».
+
