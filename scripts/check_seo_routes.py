@@ -15,6 +15,9 @@ FAKE = [
     SimpleNamespace(id=1, category="OLL", algorithm_number=1, name="Sune", group="Fish shapes",
                     formula="R U R' U R U2 R'", image_url="/assets/algorithms/oll-01.svg",
                     created_at=datetime(2026, 1, 15)),
+    SimpleNamespace(id=21, category="OLL", algorithm_number=21, name="OLL 21", group="OCLL",
+                    formula="(R U R' U) (R U' R' U) (R U2 R')", image_url="/assets/algorithms/oll-21.svg",
+                    created_at=datetime(2026, 1, 15)),
     SimpleNamespace(id=79, category="PLL", algorithm_number=1, name="Aa-perm", group="OPP swap",
                     formula="x R' U R' D2 R U' R' D2 R2", image_url="/assets/algorithms/pll-01.svg",
                     created_at=datetime(2026, 1, 15)),
@@ -70,6 +73,28 @@ check("detail: img с alt", 'alt="Диаграмма OLL #01 (Sune) — вид �
 check("detail: BreadcrumbList", "BreadcrumbList" in html_text)
 check("detail: старый лендинг удалён", "Освойте" not in html_text)
 
+# /algorithms/21 — generic-имя («OLL 21») не должно дублироваться в title/h1
+html_text, status = render_spa_html("/algorithms/21", FakeDB())
+check("detail generic: 200", status == 200)
+check("detail generic: нет дубля в title", "OLL #21 — OLL 21" not in html_text)
+check("detail generic: title с группой", "<title>OLL #21 (OCLL): формула, схема и видеоурок · CubeLearn</title>" in html_text)
+check("detail generic: h1 с группой", "<h1>OLL #21 (OCLL)</h1>" in html_text)
+check("detail generic: description без дубля группы", "(OCLL) (группа OCLL)" not in html_text)
+check("detail generic: соседние случаи", "Соседние случаи OLL" in html_text)
+check("detail generic: VideoObject отсутствует без video_url", "VideoObject" not in html_text)
+
+# VideoObject появляется при наличии video_url
+_fake_video = dict(FAKE[0].__dict__ | {"video_url": "https://www.youtube.com/watch?v=test"})
+
+
+class FakeDBWithVideo:
+    def scalars(self, stmt):
+        return FakeResult([SimpleNamespace(**_fake_video)])
+
+
+_rendered, _ = render_spa_html("/algorithms/1", FakeDBWithVideo())
+check("detail video: VideoObject в JSON-LD", '"@type": "VideoObject"' in _rendered)
+
 # /algorithms/999 — несуществующий алгоритм
 html_text, status = render_spa_html("/algorithms/999", FAKE)
 check("detail 404: статус 404", status == 404)
@@ -92,6 +117,12 @@ check("unknown: noindex 404", "404" in html_text and 'content="noindex, follow"'
 # слэш в конце нормализуется
 _, status = render_spa_html("learning/", None)
 check("trailing slash: 200", status == 200)
+html_text, status = render_spa_html("algorithms/", None)
+check("trailing slash каталога: 200 + контент каталога",
+      status == 200 and "Каталог алгоритмов CFOP" in html_text)
+html_text, status = render_spa_html("algorithms/1/", FakeDB())
+check("trailing slash детальной: 200 + title алгоритма",
+      status == 200 and "OLL #01 — Sune" in html_text)
 
 # sitemap
 xml = build_sitemap_xml(FakeDB())

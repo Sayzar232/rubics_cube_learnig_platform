@@ -1,36 +1,10 @@
 {
+  "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/sitemap.xml",
-      "destination": "https://api.cubelearn.site/sitemap.xml"
-    },
-    {
-      "source": "/learning",
-      "destination": "https://api.cubelearn.site/learning"
-    },
-    {
-      "source": "/algorithms",
-      "destination": "https://api.cubelearn.site/algorithms"
-    },
-    {
-      "source": "/algorithms/:id",
-      "destination": "https://api.cubelearn.site/algorithms/:id"
-    },
-    {
-      "source": "/auth",
-      "destination": "https://api.cubelearn.site/auth"
-    },
-    {
-      "source": "/profile",
-      "destination": "https://api.cubelearn.site/profile"
-    },
-    {
-      "source": "/verify",
-      "destination": "https://api.cubelearn.site/verify"
-    },
-    {
-      "source": "/:path((?!.*\\.).*)",
-      "destination": "/index.html"
+      "source": "/:path*",
+      "destination": "https://api.cubelearn.site/:path*"
     }
   ]
 }
+

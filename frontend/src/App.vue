@@ -224,15 +224,27 @@ async function loadPublicAlgorithms() {
   finally { loading.value = false }
 }
 
+function algorithmTitleLabel(algorithm) {
+  // Синхронизировано с _algorithm_title_label в backend/app/services/seo_service.py:
+  // у generic-имён («OLL 21») не дублируем номер, а показываем группу.
+  const nn = String(algorithm.algorithm_number).padStart(2, '0')
+  const name = (algorithm.name || '').trim().toLowerCase()
+  if (name === `${algorithm.category} ${algorithm.algorithm_number}`.toLowerCase()) {
+    return `${algorithm.category} #${nn} (${algorithm.group})`
+  }
+  return `${algorithm.category} #${nn} — ${algorithm.name}`
+}
+
 async function loadAlgorithm(id) {
   loading.value = true
   try {
     currentAlgorithm.value = await api(`/algorithms/${id}`)
     const algorithm = currentAlgorithm.value
     if (algorithm) {
+      const label = algorithmTitleLabel(algorithm)
       applyPageMeta({
-        title: `${algorithm.category} #${String(algorithm.algorithm_number).padStart(2, '0')} — ${algorithm.name}: формула, схема и видеоурок · CubeLearn`,
-        description: `Алгоритм ${algorithm.category} #${String(algorithm.algorithm_number).padStart(2, '0')} — ${algorithm.name} (группа ${algorithm.group}): формула ${algorithm.formula}, диаграмма случая и видеоурок. Изучайте CFOP на CubeLearn.`,
+        title: `${label}: формула, схема и видеоурок · CubeLearn`,
+        description: `Алгоритм ${label}: формула ${algorithm.formula}, диаграмма случая и видеоурок. Изучайте CFOP на CubeLearn.`,
         path: `/algorithms/${algorithm.id}`,
       })
     }

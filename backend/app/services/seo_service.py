@@ -85,6 +85,19 @@ def _algorithm_label(algorithm: Algorithm) -> str:
     return f"#{algorithm.algorithm_number:02d} — {_esc(algorithm.name)}"
 
 
+def _algorithm_title_label(algorithm: Algorithm) -> str:
+    """Человекочитаемое имя без дубля «OLL #21 — OLL 21».
+
+    У большинства OLL имя из парсера совпадает с «{категория} {номер}» —
+    тогда в заголовке и title используем группу, чтобы не дублировать текст.
+    """
+    category_label = _category_label(algorithm.category)
+    name = (algorithm.name or "").strip()
+    if name.lower() == f"{category_label} {algorithm.algorithm_number}".lower():
+        return f"{category_label} #{algorithm.algorithm_number:02d} ({algorithm.group})"
+    return f"{category_label} #{algorithm.algorithm_number:02d} — {name}"
+
+
 def _category_label(category: AlgorithmCategory) -> str:
     return "OLL" if category == AlgorithmCategory.OLL else "PLL"
 
@@ -121,12 +134,27 @@ def _catalog_content(algorithms: list[Algorithm]) -> str:
     return "\n".join(parts)
 
 
-def _algorithm_content(algorithm: Algorithm) -> str:
+def _algorithm_content(algorithm: Algorithm, algorithms: list[Algorithm]) -> str:
     category_label = _category_label(algorithm.category)
     total = "57" if category_label == "OLL" else "21"
     stage = "ориентации" if category_label == "OLL" else "перестановки"
+    label = _algorithm_title_label(algorithm)
     alt = f"Диаграмма {category_label} #{algorithm.algorithm_number:02d} ({algorithm.name}) — вид сверху"
-    return "\n".join([
+    moves = len(algorithm.formula.split())
+
+    neighbors: list[Algorithm] = []
+    siblings: list[Algorithm] = []
+    same_category = [a for a in algorithms if a.category == algorithm.category]
+    if algorithm in same_category:
+        idx = same_category.index(algorithm)
+        if idx > 0:
+            neighbors.append(same_category[idx - 1])
+        if idx < len(same_category) - 1:
+            neighbors.append(same_category[idx + 1])
+        siblings = [a for a in same_category
+                    if a.group == algorithm.group and a.id != algorithm.id][:4]
+
+    parts = [
         _STATIC_STYLES,
         '<div class="seo-page">',
         _breadcrumbs_trail([
@@ -134,15 +162,36 @@ def _algorithm_content(algorithm: Algorithm) -> str:
             ("Каталог алгоритмов", "/algorithms"),
             (f"{category_label} #{algorithm.algorithm_number:02d}", ""),
         ]),
-        f"<h1>{_esc(category_label)} #{algorithm.algorithm_number:02d} — {_esc(algorithm.name)}</h1>",
+        f"<h1>{_esc(label)}</h1>",
         f"<p>Группа: <b>{_esc(algorithm.group)}</b>. Один из {total} алгоритмов "
         f"{stage} последнего слоя в методе CFOP.</p>",
         f'<p class="seo-formula">Формула: <code>{_esc(algorithm.formula)}</code></p>',
+        f"<p>В формуле {moves} ходов в стандартной нотации. Учите алгоритм связками: "
+        "разбейте формулу на 2–3 части, повторите каждую до автоматизма, "
+        "затем соедините — так мышечная память закрепляется быстрее.</p>",
         f'<p><img src="{_esc(algorithm.image_url)}" alt="{_esc(alt)}" loading="lazy"></p>',
+    ]
+    if siblings:
+        sibling_links = ", ".join(
+            f'<a href="/algorithms/{a.id}">'
+            f"{_esc(_category_label(a.category))} #{a.algorithm_number:02d} — {_esc(a.name)}</a>"
+            for a in siblings
+        )
+        parts.append(
+            f"<p>Другие случаи группы «{_esc(algorithm.group)}»: {sibling_links}.</p>"
+        )
+    if neighbors:
+        neighbor_links = " · ".join(
+            f'<a href="/algorithms/{a.id}">{_esc(_algorithm_title_label(a))}</a>'
+            for a in neighbors
+        )
+        parts.append(f"<p>Соседние случаи {category_label}: {neighbor_links}.</p>")
+    parts.append(
         '<p>Смотрите видеоурок и отмечайте прогресс в <a href="/learning">режиме обучения</a> '
-        'или вернитесь в <a href="/algorithms">каталог алгоритмов</a>.</p>',
-        "</div>",
-    ])
+        'или вернитесь в <a href="/algorithms">каталог алгоритмов</a>.</p>'
+    )
+    parts.append("</div>")
+    return "\n".join(parts)
 
 
 def _learning_content() -> str:
@@ -222,7 +271,7 @@ def _catalog_ld(algorithms: list[Algorithm]) -> str:
             {
                 "@type": "ListItem",
                 "position": position,
-                "name": f"{_category_label(a.category)} #{a.algorithm_number:02d} — {a.name}",
+                "name": _algorithm_title_label(a),
                 "url": f"{SITE_URL}/algorithms/{a.id}",
             }
             for position, a in enumerate(algorithms, start=1)
@@ -243,16 +292,16 @@ def _catalog_ld(algorithms: list[Algorithm]) -> str:
 
 def _algorithm_ld(algorithm: Algorithm) -> str:
     category_label = _category_label(algorithm.category)
-    name = f"{category_label} #{algorithm.algorithm_number:02d} — {algorithm.name}"
+    label = _algorithm_title_label(algorithm)
     url = f"{SITE_URL}/algorithms/{algorithm.id}"
-    return _ld_script([
+    graph: list[dict] = [
         _website_node(),
         {
             "@type": "WebPage",
-            "name": name,
+            "name": label,
             "url": url,
             "inLanguage": "ru",
-            "description": f"Формула алгоритма {name}: {algorithm.formula}. Диаграмма и видеоурок.",
+            "description": f"Формула алгоритма {label}: {algorithm.formula}. Диаграмма и видеоурок.",
             "isPartOf": {"@type": "CollectionPage", "url": f"{SITE_URL}/algorithms"},
         },
         _breadcrumb_node([
@@ -260,7 +309,18 @@ def _algorithm_ld(algorithm: Algorithm) -> str:
             ("Каталог алгоритмов", "/algorithms"),
             (f"{category_label} #{algorithm.algorithm_number:02d}", ""),
         ]),
-    ])
+    ]
+    # getattr: у фейков в scripts/check_seo_routes.py поле video_url может отсутствовать.
+    video_url = getattr(algorithm, "video_url", None)
+    if video_url:
+        graph.append({
+            "@type": "VideoObject",
+            "name": f"Видеоурок: {label}",
+            "embedUrl": video_url,
+            "thumbnailUrl": f"{SITE_URL}/og-image.png",
+            "inLanguage": "ru",
+        })
+    return _ld_script(graph)
 
 
 def _simple_ld(name: str, url: str) -> str:
@@ -357,15 +417,16 @@ def render_spa_html(path: str, db: Session | None) -> tuple[str, int]:
         algorithm = next((a for a in algorithms if a.id == algorithm_id), None)
         if algorithm is None:
             return _not_found_page()
-        category_label = _category_label(algorithm.category)
-        name = f"{category_label} #{algorithm.algorithm_number:02d} — {algorithm.name}"
+        label = _algorithm_title_label(algorithm)
+        # У generic-имён группа уже в label («OLL #21 (OCLL)») — не дублируем её в description.
+        group_part = "" if f"({algorithm.group})" in label else f" (группа {algorithm.group})"
         return _apply(
             _base_html(),
-            title=f"{name}: формула, схема и видеоурок · CubeLearn",
-            description=f"Алгоритм {name} (группа {algorithm.group}): формула "
+            title=f"{label}: формула, схема и видеоурок · CubeLearn",
+            description=f"Алгоритм {label}{group_part}: формула "
                         f"{algorithm.formula}, диаграмма случая и видеоурок. Изучайте CFOP на CubeLearn.",
             canonical_path=f"/algorithms/{algorithm.id}",
-            content=_algorithm_content(algorithm),
+            content=_algorithm_content(algorithm, algorithms),
             ld_json=_algorithm_ld(algorithm),
             robots="index, follow",
         ), 200
