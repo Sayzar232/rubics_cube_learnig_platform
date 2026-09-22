@@ -56,6 +56,37 @@ def git_dirty_dist() -> list[str]:
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
 
+def vercel_asset_url(ref: str) -> str:
+    """Адрес ассета на основном домене (Vercel собирает фронтенд сам)."""
+    return f"https://cubelearn.site{ref}"
+
+
+def check_vercel_bundles(refs: set[str]) -> None:
+    """Банды из серверного HTML обязаны существовать на основном домене.
+
+    Регрессия P0: dist собирали с локальным frontend/.env (localhost) — хэши
+    расходились со сборкой Vercel, /assets/index-*.js отдавал 404 и SPA на
+    серверных маршрутах (/algorithms, /learning, ...) не запускалась.
+    """
+    import urllib.request
+
+    if not refs:
+        check("vercel: ассеты из dist/index.html доступны на основном домене", False, "ссылок нет")
+        return
+    unreachable: list[str] = []
+    for ref in sorted(refs):
+        url = vercel_asset_url(ref)
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, method="HEAD"), timeout=30) as resp:
+                ok = 200 <= resp.status < 400
+        except Exception:  # noqa: BLE001 — любой сетевой сбой считаем провалом проверки
+            ok = False
+        if not ok:
+            unreachable.append(f"{ref} (нет на {url})")
+    check("vercel: ассеты из dist/index.html доступны на основном домене", not unreachable,
+          "; ".join(unreachable))
+
+
 def check_dist_integrity() -> None:
     index = DIST / "index.html"
     check("dist/index.html существует", index.is_file())
@@ -68,11 +99,16 @@ def check_dist_integrity() -> None:
     check("dist/index.html: FAQ-схема на месте", "FAQPage" in html)
     check("dist/index.html: canonical главной", '<link rel="canonical" href="https://cubelearn.site/" />' in html)
 
+    refs = set(re.findall(r'(?:src|href)="(/assets/[^"]+)"', html))
+    check("dist/index.html: сборка с прод-env (нет localhost в именах ассетов)", all(
+        "localhost" not in ref for ref in refs), ", ".join(sorted(refs)))
     missing = [
-        ref for ref in set(re.findall(r'(?:src|href)="(/assets/[^"]+)"', html))
+        ref for ref in refs
         if not (DIST / ref.lstrip("/")).is_file()
     ]
     check("dist: все ссылки на /assets/* существуют", not missing, ", ".join(sorted(missing)))
+
+    check_vercel_bundles(refs)
 
     situations = DIST / "data" / "situations.json"
     check("dist/data/situations.json существует", situations.is_file())

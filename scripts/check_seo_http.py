@@ -63,6 +63,16 @@ check("api-хост -> X-Robots-Tag: noindex",
 r = client.get("/", headers={"host": "cubelearn.site"})
 check("основной хост -> без X-Robots-Tag", "x-robots-tag" not in r.headers)
 
+r = client.get("/algorithms", headers={"host": "api.cubelearn.site",
+                                       "x-forwarded-host": "cubelearn.site"})
+check("прокси Vercel (forwarded=основной домен) -> без X-Robots-Tag",
+      "x-robots-tag" not in r.headers, r.headers.get("x-robots-tag", "нет"))
+
+r = client.get("/sitemap.xml", headers={"host": "api.cubelearn.site",
+                                        "x-forwarded-host": "cubelearn.site"})
+check("sitemap через прокси -> без X-Robots-Tag",
+      "x-robots-tag" not in r.headers, r.headers.get("x-robots-tag", "нет"))
+
 r = client.get("/api/health")
 check("GET /api/health -> 200", r.status_code == 200)
 

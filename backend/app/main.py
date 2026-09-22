@@ -22,9 +22,9 @@ cors_origins = [origin.strip() for origin in settings.cors_origins.split(",") if
 # Хосты, которые не должны попадать в индекс: публичный адрес бэкенда
 # (api.cubelearn.site) отдаёт те же HTML-страницы, что и основной домен.
 noindex_hosts = {host.strip().lower() for host in settings.noindex_hosts.split(",") if host.strip()}
-_site_netloc = urlparse(settings.site_url).netloc
+_site_netloc = urlparse(settings.site_url).netloc.lower()
 if _site_netloc:
-    noindex_hosts.add(f"api.{_site_netloc}".lower())
+    noindex_hosts.add(f"api.{_site_netloc}")
 
 app = FastAPI(
     title=settings.app_name,
@@ -47,10 +47,17 @@ app.add_middleware(
 
 @app.middleware("http")
 async def tag_duplicate_hosts_as_noindex(request: Request, call_next):
-    """X-Robots-Tag: noindex для дублирующих хостов (например, api.cubelearn.site)."""
+    """X-Robots-Tag: noindex для дублирующих хостов (например, api.cubelearn.site).
+
+    Важно: Vercel проксирует /algorithms, /learning и /sitemap.xml основного
+    домена на бэкенд, подставляя исходный хост в x-forwarded-host. Такие запросы
+    закрывать нельзя — иначе весь сайт, кроме главной, выпадает из индекса.
+    """
     response = await call_next(request)
     host = request.headers.get("host", "").split(":")[0].lower()
-    if host in noindex_hosts:
+    forwarded_host = request.headers.get("x-forwarded-host", "").split(",")[0].strip().split(":")[0].lower()
+    public_host = forwarded_host or host
+    if public_host in noindex_hosts:
         response.headers["X-Robots-Tag"] = "noindex, nofollow"
     return response
 

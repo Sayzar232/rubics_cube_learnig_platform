@@ -106,12 +106,19 @@ npm run build
    бэкенд раздаёт закоммиченную сборку, а Vercel собирает фронтенд сам, поэтому
    устаревший `dist` означает, что на `/algorithms`, `/learning` и `/auth`
    пользователь получает другой JS-бандл, чем на главной (мета/canonical в
-   браузере расходятся с серверным HTML). Проверка — `python scripts/check_frontend_dist.py`.
-2. **Vercel (фронтенд)**: реврайты берутся из `frontend/vercel.json`; после
-   деплоя проверка: `curl -I https://cubelearn.site/learning` должен отвечать
-   бэкенд (не `Server: Vercel`), а в HTML — title «Режим обучения CFOP…».
-   Переменная `VITE_SITE_URL` не обязательна (по умолчанию `https://cubelearn.site`),
-   но её стоит задать, если домен изменится.
+   браузере расходятся с серверным HTML). Сборка обязана идти с прод-значениями
+   из закоммиченного `frontend/.env.production` (`VITE_API_URL=https://api.cubelearn.site`,
+   `VITE_SITE_URL=https://cubelearn.site`): сборка с локальным `frontend/.env`
+   (localhost) давала другой хэш бандла, и `/assets/index-*.js` из серверного HTML
+   отвечал 404 на основном домене — SPA на серверных маршрутах не запускалась.
+   Проверка — `python scripts/check_frontend_dist.py` (в т.ч. сверяет, что ассеты
+   из `dist/index.html` отдаются с `https://cubelearn.site`).
+2. **Vercel (фронтенд)**: реврайты берутся из `frontend/vercel.json`; переменные
+   окружения в проекте Vercel обязаны зеркалить `frontend/.env.production`
+   (`VITE_API_URL`, `VITE_SITE_URL`), иначе хэш бандла Vercel разойдётся с
+   закоммиченным `dist`. После деплоя проверка: `curl -I https://cubelearn.site/learning`
+   должен отвечать бэкенд (не `Server: Vercel`), в HTML — title «Режим обучения CFOP…»,
+   и **без** заголовка `X-Robots-Tag`.
 3. **Render (окружение)**: `SITE_URL` — канонический адрес для canonical/og:url/
    sitemap; `ENABLE_API_DOCS` по умолчанию **выключен** (в проде `/docs`, `/redoc`,
    `/openapi.json` отвечают 404); `NOINDEX_HOSTS` — дополнительные хосты для
@@ -133,7 +140,9 @@ npm run build
 4. `robots.txt` закрывает `/api/`, `/docs`, `/redoc`, `/openapi.json`, `/index.html`
    и указывает `Sitemap`. `sitemap.xml` отвечает и на `GET`, и на `HEAD`.
 5. `api.cubelearn.site` отдаёт те же страницы, поэтому все его ответы помечаются
-   `X-Robots-Tag: noindex, nofollow`.
+   `X-Robots-Tag: noindex, nofollow` — кроме запросов, пришедших через прокси
+   Vercel с основного домена (`x-forwarded-host: cubelearn.site`): их закрывать
+   нельзя, иначе из индекса выпадает весь сайт, кроме главной.
 
 Проверки (запускать перед деплоем):
 
