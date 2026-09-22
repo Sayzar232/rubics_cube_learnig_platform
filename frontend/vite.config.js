@@ -21,8 +21,23 @@ function injectLanding() {
   }
 }
 
+/**
+ * Кладёт данные диаграмм в сборку: dist/data/situations.json.
+ * Бэкенд рендерит те же SVG на сервере (backend/app/services/diagram_service.py),
+ * а в Docker-образ попадает только frontend/dist, без frontend/src.
+ */
+function emitSituations() {
+  return {
+    name: 'emit-situations',
+    generateBundle() {
+      const source = readFileSync(join(__dirname, 'src', 'situations.json'), 'utf8').replace(/^\uFEFF/, '')
+      this.emitFile({ type: 'asset', fileName: 'data/situations.json', source })
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [vue(), injectLanding()],
+  plugins: [vue(), injectLanding(), emitSituations()],
   resolve: {
     alias: {
       vue: 'vue/dist/vue.esm-bundler.js',

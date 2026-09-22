@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session
 from ..core.config import get_settings
 from ..models.algorithm import Algorithm, AlgorithmCategory
 from .algorithm_service import algorithm_sort_key
+from .diagram_service import render_diagram_svg
 
 settings = get_settings()
 SITE_URL = settings.site_url.rstrip("/")
@@ -61,7 +62,9 @@ _STATIC_STYLES = """<style>
   .seo-page a{color:#2563eb;text-decoration:none}
   .seo-page a:hover{text-decoration:underline}
   .seo-page code{display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:6px;padding:2px 8px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px}
-  .seo-page img{max-width:260px;border-radius:12px;border:1px solid #e5e7eb}
+  .seo-page svg.cube-diagram{display:block;width:100%;max-width:320px;height:auto;margin:0 auto}
+  .seo-page figure.seo-diagram{margin:18px 0;padding:12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px}
+  .seo-page figure.seo-diagram figcaption{font-size:13px;color:#6b7280;margin-top:8px;text-align:center}
   .seo-page .seo-formula{font-size:18px;font-weight:600;margin:12px 0}
   .seo-breadcrumb{font-size:14px;color:#6b7280;margin-bottom:18px}
 </style>"""
@@ -139,7 +142,7 @@ def _algorithm_content(algorithm: Algorithm, algorithms: list[Algorithm]) -> str
     total = "57" if category_label == "OLL" else "21"
     stage = "ориентации" if category_label == "OLL" else "перестановки"
     label = _algorithm_title_label(algorithm)
-    alt = f"Диаграмма {category_label} #{algorithm.algorithm_number:02d} ({algorithm.name}) — вид сверху"
+    diagram = render_diagram_svg(category_label, algorithm.algorithm_number, label)
     moves = len(algorithm.formula.split())
 
     neighbors: list[Algorithm] = []
@@ -169,8 +172,15 @@ def _algorithm_content(algorithm: Algorithm, algorithms: list[Algorithm]) -> str
         f"<p>В формуле {moves} ходов в стандартной нотации. Учите алгоритм связками: "
         "разбейте формулу на 2–3 части, повторите каждую до автоматизма, "
         "затем соедините — так мышечная память закрепляется быстрее.</p>",
-        f'<p><img src="{_esc(algorithm.image_url)}" alt="{_esc(alt)}" loading="lazy"></p>',
     ]
+    if diagram:
+        # Диаграмма отдаётся inline-SVG из situations.json: файлы
+        # /assets/algorithms/*.svg не коммитятся и в проде отдавали 404.
+        parts.append(
+            f'<figure class="seo-diagram">{diagram}'
+            f"<figcaption>Схема случая {_esc(label)}: вид сверху, жёлтые наклейки — "
+            "ориентированный последний слой.</figcaption></figure>"
+        )
     if siblings:
         sibling_links = ", ".join(
             f'<a href="/algorithms/{a.id}">'

@@ -1,9 +1,60 @@
 {
   "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/data/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
-      "source": "/:path*",
-      "destination": "https://api.cubelearn.site/:path*"
+      "source": "/algorithms",
+      "destination": "https://api.cubelearn.site/algorithms"
+    },
+    {
+      "source": "/algorithms/:path*",
+      "destination": "https://api.cubelearn.site/algorithms/:path*"
+    },
+    {
+      "source": "/learning",
+      "destination": "https://api.cubelearn.site/learning"
+    },
+    {
+      "source": "/auth",
+      "destination": "https://api.cubelearn.site/auth"
+    },
+    {
+      "source": "/profile",
+      "destination": "https://api.cubelearn.site/profile"
+    },
+    {
+      "source": "/verify",
+      "destination": "https://api.cubelearn.site/verify"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://api.cubelearn.site/sitemap.xml"
     }
   ]
 }

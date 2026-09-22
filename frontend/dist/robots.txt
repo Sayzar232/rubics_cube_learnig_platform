@@ -1,4 +1,11 @@
 User-agent: *
 Allow: /
 
+# Служебные и дублирующие адреса: нет смысла тратить на них краулинговый бюджет.
+Disallow: /api/
+Disallow: /docs
+Disallow: /redoc
+Disallow: /openapi.json
+Disallow: /index.html
+
 Sitemap: https://cubelearn.site/sitemap.xml

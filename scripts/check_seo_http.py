@@ -39,8 +39,29 @@ check("GET unknown -> noindex", 'content="noindex, follow"' in r.text)
 r = client.get("/sitemap.xml")
 check("GET /sitemap.xml -> 200 xml", r.status_code == 200 and "<urlset" in r.text)
 
+r = client.head("/sitemap.xml")
+check("HEAD /sitemap.xml -> 200 (не 404)",
+      r.status_code == 200 and r.headers.get("content-type", "").startswith("application/xml"),
+      f"status={r.status_code}")
+
 r = client.get("/robots.txt")
 check("GET /robots.txt -> 200", r.status_code == 200)
+check("robots.txt -> Disallow: /api/", "Disallow: /api/" in r.text)
+check("robots.txt -> Sitemap указан", "Sitemap: https://cubelearn.site/sitemap.xml" in r.text)
+
+r = client.get("/docs")
+check("GET /docs -> 404 (служебная документация выключена)", r.status_code == 404)
+r = client.get("/openapi.json")
+check("GET /openapi.json -> 404", r.status_code == 404)
+r = client.get("/redoc")
+check("GET /redoc -> 404", r.status_code == 404)
+
+r = client.get("/", headers={"host": "api.cubelearn.site"})
+check("api-хост -> X-Robots-Tag: noindex",
+      r.headers.get("x-robots-tag") == "noindex, nofollow", r.headers.get("x-robots-tag", "нет"))
+
+r = client.get("/", headers={"host": "cubelearn.site"})
+check("основной хост -> без X-Robots-Tag", "x-robots-tag" not in r.headers)
 
 r = client.get("/api/health")
 check("GET /api/health -> 200", r.status_code == 200)

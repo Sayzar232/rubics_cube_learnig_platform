@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     frontend_url: str = Field(default="http://localhost:5173", alias="FRONTEND_URL")
     # Канонический публичный адрес сайта: используется в canonical, og:url, JSON-LD и sitemap.
     site_url: str = Field(default="https://cubelearn.site", alias="SITE_URL")
+    # Служебная документация FastAPI (/docs, /redoc, /openapi.json): в проде выключена,
+    # локально включается ENABLE_API_DOCS=true.
+    enable_api_docs: bool = Field(default=False, alias="ENABLE_API_DOCS")
+    # Дополнительные хосты, к ответам которых добавляется X-Robots-Tag: noindex (через запятую).
+    # Хост api.<домен SITE_URL> учитывается автоматически.
+    noindex_hosts: str = Field(default="", alias="NOINDEX_HOSTS")
     email_api_url: str = Field(default="https://api.smtp.bz/v1/smtp/send", alias="EMAIL_API_URL")
     email_api_key: str = Field(default="", alias="EMAIL_API_KEY")
     cors_origins: str = Field(

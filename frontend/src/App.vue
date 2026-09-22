@@ -29,7 +29,8 @@ const auth = ref({ username: '', email: '', password: '' })
 const apiBaseUrl = import.meta.env.VITE_API_URL.replace(/\/$/, '')
 
 // --- SEO: уникальные title/description/canonical/og для каждого маршрута ----
-const SITE_URL = 'https://cubelearn.site'
+// Канонический адрес сайта: VITE_SITE_URL (frontend/.env, переменные Vercel), иначе прод-домен.
+const SITE_URL = (import.meta.env.VITE_SITE_URL || 'https://cubelearn.site').replace(/\/$/, '')
 const PAGE_META = {
   landing: {
     title: 'CubeLearn — обучение скоростной сборки кубика Рубика · Метод CFOP',
@@ -41,11 +42,9 @@ const PAGE_META = {
     description: 'Полный каталог алгоритмов метода CFOP: 57 случаев OLL и 21 случай PLL с формулами, схемами и видеоуроками. Бесплатно, на русском языке.',
     path: '/algorithms',
   },
-  detail: {
-    title: 'Алгоритм CFOP: формула, схема и видеоурок · CubeLearn',
-    description: 'Формула, диаграмма случая и видеоурок алгоритма CFOP. Изучайте OLL и PLL на CubeLearn.',
-    path: '/algorithms',
-  },
+  // Страница алгоритма (detail) мету не получает: canonical/og:url ставит
+  // applyCanonicalMeta() по id из адреса, а title/description — loadAlgorithm()
+  // по загруженному алгоритму (тот же формат, что в серверном HTML).
   learning: {
     title: 'Режим обучения CFOP — учите алгоритмы по одному · CubeLearn',
     description: 'Тренажёр подбирает следующий алгоритм OLL или PLL, показывает диаграмму, формулу и видеоурок. Отмечайте прогресс и копите стрик — бесплатно.',
@@ -93,6 +92,17 @@ function applyPageMeta(meta) {
     element.setAttribute('content', robotsValue)
     document.head.appendChild(element)
   }
+}
+
+// Страница алгоритма: canonical/og:url известны из адреса ещё до загрузки данных.
+// Без этого тэги на миг указывали бы на каталог (/algorithms) и расходились
+// с canonical серверного HTML, который читают поисковые роботы.
+function applyCanonicalMeta(path) {
+  const url = SITE_URL + path
+  const canonical = document.head.querySelector('link[rel="canonical"]')
+  if (canonical) canonical.setAttribute('href', url)
+  const ogUrl = document.head.querySelector('meta[property="og:url"]')
+  if (ogUrl) ogUrl.setAttribute('content', url)
 }
 
 const api = async (url, options = {}) => {
@@ -156,6 +166,7 @@ const activityDays = computed(() => {
 
 function consumeRoute() {
   const value = route()
+  let detailId = 0
   if (value === '/') page.value = 'landing'
   else if (value === '/auth') page.value = 'auth'
   else if (value === '/learning') page.value = 'learning'
@@ -163,7 +174,7 @@ function consumeRoute() {
   else if (value.startsWith('/algorithms/')) {
     page.value = 'detail'
     const id = Number(value.split('/').pop())
-    if (id) loadAlgorithm(id)
+    if (id) { detailId = id; loadAlgorithm(id) }
   } else if (value === '/profile') page.value = 'profile'
   else if (value.startsWith('/verify')) {
     page.value = 'verify'
@@ -177,7 +188,13 @@ function consumeRoute() {
   }
   else navigate('/')
 
-  applyPageMeta(PAGE_META[page.value])
+  if (page.value === 'detail' && detailId) {
+    // title/description подставит loadAlgorithm() по загруженному алгоритму,
+    // а canonical/og:url — сразу, чтобы не указывать на каталог.
+    applyCanonicalMeta(`/algorithms/${detailId}`)
+  } else {
+    applyPageMeta(PAGE_META[page.value])
+  }
 
   // All pages are accessible without auth.
   // Data loading: if logged in, use full refreshData(); otherwise load public algorithms list.
@@ -222,17 +239,6 @@ async function loadPublicAlgorithms() {
     dataLoaded.value = true
   } catch (err) { error.value = err.message }
   finally { loading.value = false }
-}
-
-function algorithmTitleLabel(algorithm) {
-  // Синхронизировано с _algorithm_title_label в backend/app/services/seo_service.py:
-  // у generic-имён («OLL 21») не дублируем номер, а показываем группу.
-  const nn = String(algorithm.algorithm_number).padStart(2, '0')
-  const name = (algorithm.name || '').trim().toLowerCase()
-  if (name === `${algorithm.category} ${algorithm.algorithm_number}`.toLowerCase()) {
-    return `${algorithm.category} #${nn} (${algorithm.group})`
-  }
-  return `${algorithm.category} #${nn} — ${algorithm.name}`
 }
 
 async function loadAlgorithm(id) {
@@ -536,6 +542,19 @@ onMounted(async () => {
 <script>
 import situations from './situations.json'
 
+// Синхронизировано с _algorithm_title_label в backend/app/services/seo_service.py:
+// у generic-имён («OLL 21») не дублируем номер, а показываем группу.
+// Живёт в обычном <script> (module scope), чтобы функция была доступна и в
+// <script setup> (loadAlgorithm), и в компоненте AlgorithmDetail.
+function algorithmTitleLabel(algorithm) {
+  const nn = String(algorithm.algorithm_number).padStart(2, '0')
+  const name = (algorithm.name || '').trim().toLowerCase()
+  if (name === `${algorithm.category} ${algorithm.algorithm_number}`.toLowerCase()) {
+    return `${algorithm.category} #${nn} (${algorithm.group})`
+  }
+  return `${algorithm.category} #${nn} — ${algorithm.name}`
+}
+
 const STICKER_COLORS = Object.freeze({
   Y: '#FFFF00',
   N: '#8D8D8D',
@@ -613,6 +632,7 @@ const AlgorithmDetail = {
   emits: ['complete', 'next', 'catalog'],
   computed: {
     isOll() { return this.algorithm.category === 'OLL' },
+    titleLabel() { return algorithmTitleLabel(this.algorithm) },
     embedUrl() {
       const videoUrl = this.algorithm?.video_url
       if (!videoUrl) return null
@@ -632,7 +652,7 @@ const AlgorithmDetail = {
       } catch { return null }
     },
   },
-  template: `<div class="detail"><div class="detail-heading"><div><button class="back-link" @click="$emit('catalog')"><AppIcon name="arrow-left" :size="14"/> К каталогу</button><h1>{{ algorithm.category }} #{{ algorithm.algorithm_number }} — {{ algorithm.name }}</h1><p>{{ stats.learned_total }} из {{ stats.total_algorithms }} изучено</p></div><button class="button button--dark" @click="$emit('next')">Следующий <AppIcon name="arrow-right" :size="15"/></button></div><div class="detail-progress"><i :style="{ width: stats.overall_percentage + '%' }"/></div><div class="detail-grid"><section><div class="diagram-card" :class="isOll ? 'oll' : 'pll'"><CubeDiagram :algorithm="algorithm"/><span>{{ algorithm.category }} · вид сверху</span></div><div class="formula-card"><small>АЛГОРИТМ</small><div><code v-for="(move, index) in algorithm.formula.split(' ')" :key="index">{{ move }}</code></div><button v-if="!algorithm.is_learned" class="master-button" :disabled="loading" @click="$emit('complete')"><AppIcon v-if="!loading" name="check" :size="16"/> {{ loading ? 'Сохраняем…' : 'Отметить как выученный' }}</button><p v-else class="mastered"><AppIcon name="check" :size="15"/> Алгоритм изучен</p></div></section><section><div class="video-card"><iframe v-if="embedUrl" class="video-player" :src="embedUrl" :title="algorithm.name + ' — видеоурок'" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"/><a v-else-if="algorithm.video_url" :href="algorithm.video_url" target="_blank" rel="noreferrer" class="video-link"><span class="video-glyph"><AppIcon name="play" :size="20"/></span><b>{{ algorithm.name }} — видеоурок</b><small>Открыть видео</small></a><div v-else class="video-placeholder"><span class="video-glyph"><AppIcon name="play" :size="20"/></span><b>{{ algorithm.name }} — видеоурок</b><small>Видео будет добавлено позже</small></div></div><div class="tips"><h2>💡 Советы по запоминанию</h2><p>🎯 Разбей алгоритм на блоки по 3–4 хода.</p><p>🔁 Повтори 10 раз медленно, затем ускоряйся.</p><p>👁️ Запомни визуальный паттерн случая.</p></div></section></div></div>`,
+  template: `<div class="detail"><div class="detail-heading"><div><button class="back-link" @click="$emit('catalog')"><AppIcon name="arrow-left" :size="14"/> К каталогу</button><h1>{{ titleLabel }}</h1><p>{{ stats.learned_total }} из {{ stats.total_algorithms }} изучено</p></div><button class="button button--dark" @click="$emit('next')">Следующий <AppIcon name="arrow-right" :size="15"/></button></div><div class="detail-progress"><i :style="{ width: stats.overall_percentage + '%' }"/></div><div class="detail-grid"><section><div class="diagram-card" :class="isOll ? 'oll' : 'pll'"><CubeDiagram :algorithm="algorithm"/><span>{{ algorithm.category }} · вид сверху</span></div><div class="formula-card"><small>АЛГОРИТМ</small><div><code v-for="(move, index) in algorithm.formula.split(' ')" :key="index">{{ move }}</code></div><button v-if="!algorithm.is_learned" class="master-button" :disabled="loading" @click="$emit('complete')"><AppIcon v-if="!loading" name="check" :size="16"/> {{ loading ? 'Сохраняем…' : 'Отметить как выученный' }}</button><p v-else class="mastered"><AppIcon name="check" :size="15"/> Алгоритм изучен</p></div></section><section><div class="video-card"><iframe v-if="embedUrl" class="video-player" :src="embedUrl" :title="algorithm.name + ' — видеоурок'" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"/><a v-else-if="algorithm.video_url" :href="algorithm.video_url" target="_blank" rel="noreferrer" class="video-link"><span class="video-glyph"><AppIcon name="play" :size="20"/></span><b>{{ algorithm.name }} — видеоурок</b><small>Открыть видео</small></a><div v-else class="video-placeholder"><span class="video-glyph"><AppIcon name="play" :size="20"/></span><b>{{ algorithm.name }} — видеоурок</b><small>Видео будет добавлено позже</small></div></div><div class="tips"><h2>💡 Советы по запоминанию</h2><p>🎯 Разбей алгоритм на блоки по 3–4 хода.</p><p>🔁 Повтори 10 раз медленно, затем ускоряйся.</p><p>👁️ Запомни визуальный паттерн случая.</p></div></section></div></div>`,
 }
 
 export default { components: { AlgorithmDetail, CubeDiagram, ProgressBar, AppIcon } }

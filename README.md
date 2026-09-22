@@ -84,26 +84,72 @@ npm run build
 ```
 
 После этого FastAPI будет раздавать собранный фронтенд из `frontend/dist`.
-После этого FastAPI будет раздавать собранный фронтенд из `frontend/dist`.
 
 ## Прод-маршрутизация (Vercel + Render)
 
 Архитектура: `cubelearn.site` — статика на Vercel, `api.cubelearn.site` — FastAPI на Render.
 
-Чтобы запросы к `https://cubelearn.site/learning`, `/algorithms`, `/auth`, `/profile`,
-`/verify` и `/algorithms/:id` отдавали **серверной отрисованный HTML** с уникальными
-SEO-мета (а не одинаковый `index.html` лендинга), в `frontend/vercel.json` эти пути
-проксируются реврайтами на `https://api.cubelearn.site/...`, где `SPAStaticFiles`
-+ `render_spa_html` возвращают полноценный SPA-HTML. Остальные неизвестные пути
-без точки уходят на `/index.html` (catch-all), а бэкенд отвечает честным 404.
+`frontend/vercel.json` реврайтами отправляет на бэкенд только SPA-маршруты
+(`/algorithms`, `/algorithms/:path*`, `/learning`, `/auth`, `/profile`, `/verify`,
+`/sitemap.xml`), где `SPAStaticFiles` + `render_spa_html` отдают серверно
+отрисованный HTML с уникальными SEO-мета. Главная, `robots.txt`, `index.html` и
+ассеты остаются статикой Vercel; неизвестные пути больше не уходят на Render, а
+получают обычный 404 от Vercel. Там же заданы заголовки кеширования:
+`/assets/*` — `max-age=31536000, immutable`, `/index.html` — 301 на `/`.
 
 Требования к деплою:
 
 1. **Render (бэкенд)**: в репозитории должен быть закоммичен `frontend/dist/`
    (он больше не в `.gitignore`). При старте `main.py` монтирует `SPAStaticFiles`
    только если `frontend/dist` существует — иначе все SPA-пути вернут 404.
-   После изменения фронтенда не забудьте `npm run build` и закоммитить новый `dist`.
+   После изменения фронтенда обязательно `npm run build` и **коммит нового `dist`**:
+   бэкенд раздаёт закоммиченную сборку, а Vercel собирает фронтенд сам, поэтому
+   устаревший `dist` означает, что на `/algorithms`, `/learning` и `/auth`
+   пользователь получает другой JS-бандл, чем на главной (мета/canonical в
+   браузере расходятся с серверным HTML). Проверка — `python scripts/check_frontend_dist.py`.
 2. **Vercel (фронтенд)**: реврайты берутся из `frontend/vercel.json`; после
    деплоя проверка: `curl -I https://cubelearn.site/learning` должен отвечать
    бэкенд (не `Server: Vercel`), а в HTML — title «Режим обучения CFOP…».
+   Переменная `VITE_SITE_URL` не обязательна (по умолчанию `https://cubelearn.site`),
+   но её стоит задать, если домен изменится.
+3. **Render (окружение)**: `SITE_URL` — канонический адрес для canonical/og:url/
+   sitemap; `ENABLE_API_DOCS` по умолчанию **выключен** (в проде `/docs`, `/redoc`,
+   `/openapi.json` отвечают 404); `NOINDEX_HOSTS` — дополнительные хосты для
+   `X-Robots-Tag: noindex` (хост `api.<домен SITE_URL>` учитывается автоматически).
+
+## SEO-инварианты и проверки
+
+1. Серверный HTML задаёт `title`, `description`, `canonical`, `og:*`, `robots`,
+   JSON-LD и контент (каталог, страница алгоритма, режим обучения, 404).
+2. **Клиентский код не имеет права менять `canonical` серверного HTML** и обязан
+   оставлять self-referencing URL (`/algorithms/{id}`), а `title` — с именем случая.
+   Нарушение этого правила приводило к тому, что все 78 страниц алгоритмов
+   объявляли канонической `/algorithms`.
+3. Диаграммы случаев рендерятся на сервере как inline-SVG из `situations.json`
+   (`backend/app/services/diagram_service.py`); файловые `/assets/algorithms/*.svg`
+   не используются, потому что папка исключена из репозитория и в проде давала 404.
+   Сборка кладёт копию данных в `dist/data/situations.json` (нужна Docker-образу,
+   куда `frontend/src` не попадает).
+4. `robots.txt` закрывает `/api/`, `/docs`, `/redoc`, `/openapi.json`, `/index.html`
+   и указывает `Sitemap`. `sitemap.xml` отвечает и на `GET`, и на `HEAD`.
+5. `api.cubelearn.site` отдаёт те же страницы, поэтому все его ответы помечаются
+   `X-Robots-Tag: noindex, nofollow`.
+
+Проверки (запускать перед деплоем):
+
+```bash
+python scripts/check_seo_routes.py       # серверная отрисовка маршрутов (без БД)
+python scripts/check_seo_http.py         # HTTP-поведение: 404, noindex, sitemap, docs
+python scripts/check_frontend_dist.py    # сборка dist, git-сверка и целостность
+python scripts/check_seo_client.py       # мета в браузере (Selenium + Chrome), прод
+python scripts/check_history_routing.py  # History API и фолбэки
+```
+
+Локальный прогон браузерной проверки без БД (поднимает `dist` + заглушку API):
+
+```bash
+python scripts/preview_server.py &
+python scripts/check_seo_client.py --url http://localhost:8000 --site-url http://localhost:5173
+```
+
 

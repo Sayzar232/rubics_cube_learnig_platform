@@ -9,6 +9,7 @@ from types import SimpleNamespace
 
 sys.path.insert(0, str(Path("backend").resolve()))
 
+from app.services.diagram_service import render_diagram_svg  # noqa: E402
 from app.services.seo_service import render_spa_html, build_sitemap_xml  # noqa: E402
 
 FAKE = [
@@ -69,7 +70,11 @@ check("detail: title с именем", "OLL #01 — Sune" in html_text)
 check("detail: canonical /algorithms/1", 'href="https://cubelearn.site/algorithms/1"' in html_text)
 check("detail: формула в контенте", "R U R' U R U2 R'" in html_text)
 check("detail: h1", "<h1>OLL #01 — Sune</h1>" in html_text)
-check("detail: img с alt", 'alt="Диаграмма OLL #01 (Sune) — вид сверху"' in html_text)
+check("detail: inline-SVG диаграмма", '<figure class="seo-diagram"><svg class="cube-diagram"' in html_text)
+check("detail: SVG с наклейками случая", html_text.count('<rect x="106" y="86" width="123" height="123"') == 1)
+check("detail: подпись схемы", "Схема случая OLL #01 — Sune" in html_text)
+check("detail: нет ссылок на несуществующие /assets/algorithms", "/assets/algorithms" not in html_text)
+check("detail: нет <img> из удалённых файлов", "<img" not in html_text)
 check("detail: BreadcrumbList", "BreadcrumbList" in html_text)
 check("detail: старый лендинг удалён", "Освойте" not in html_text)
 
@@ -128,6 +133,27 @@ check("trailing slash детальной: 200 + title алгоритма",
 xml = build_sitemap_xml(FakeDB())
 check("sitemap: все URL", xml.count("<loc>") == 3 + len(FAKE))
 check("sitemap: lastmod присутствует", "<lastmod>2026-01-15</lastmod>" in xml)
+
+# диаграмма: серверный inline-SVG из situations.json
+check("diagram: данные случая найдены", render_diagram_svg("OLL", 1, "OLL #01 — Sune") is not None)
+check("diagram: неизвестный случай не роняет рендер", render_diagram_svg("OLL", 999, "OLL #999") is None)
+
+
+class FakeDBWithoutSituation:
+    """Алгоритм без данных о наклейках: страница не должна ссылаться на картинки."""
+
+    def scalars(self, stmt):
+        return FakeResult([
+            SimpleNamespace(id=5, category="OLL", algorithm_number=77, name="OLL 77", group="Unknown",
+                            formula="R U R'", image_url="/assets/algorithms/oll-77.svg",
+                            created_at=datetime(2026, 1, 15)),
+        ])
+
+
+html_text, status = render_spa_html("/algorithms/5", FakeDBWithoutSituation())
+check("detail без данных диаграммы: 200", status == 200)
+check("detail без данных диаграммы: без <img> и без /assets/algorithms",
+      "<img" not in html_text and "/assets/algorithms" not in html_text)
 
 # базовая целостность HTML
 html_text, _ = render_spa_html("/algorithms/1", FakeDB())
