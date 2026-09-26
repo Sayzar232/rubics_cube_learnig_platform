@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -53,6 +53,24 @@ class Settings(BaseSettings):
         default="postgresql+psycopg2://cfop_user:cfop_password@db:5432/cfop_db",
         alias="DATABASE_URL",
     )
+
+    @field_validator("database_url")
+    @classmethod
+    def _force_psycopg2_driver(cls, value: str) -> str:
+        """Явно фиксируем psycopg2 как драйвер для PostgreSQL.
+
+        Render/Heroku и подобные хостинги отдают DATABASE_URL без указания драйвера
+        (``postgresql://...`` или устаревший ``postgres://...``). В SQLAlchemy 2.1
+        дефолтным драйвером для ``postgresql://`` стал ``psycopg`` (версии 3), которого
+        нет в requirements, из-за чего приложение падало с
+        ``ModuleNotFoundError: No module named 'psycopg'``. Проект собирается с
+        ``psycopg2-binary``, поэтому приводим URL к виду ``postgresql+psycopg2://``.
+        """
+        for prefix in ("postgres://", "postgresql://"):
+            if value.startswith(prefix):
+                return "postgresql+psycopg2://" + value[len(prefix) :]
+        return value
+
     speedcubedb_user_agent: str = "CFOP Trainer/1.0"
     frontend_dir: Path = PROJECT_ROOT / "frontend" / "dist"
     algorithm_assets_dir: Path = PROJECT_ROOT / "frontend" / "public" / "assets" / "algorithms"
