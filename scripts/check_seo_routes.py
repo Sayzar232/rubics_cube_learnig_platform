@@ -3,7 +3,7 @@
 import json
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -129,10 +129,13 @@ html_text, status = render_spa_html("algorithms/1/", FakeDB())
 check("trailing slash детальной: 200 + title алгоритма",
       status == 200 and "OLL #01 — Sune" in html_text)
 
-# sitemap
+# sitemap: lastmod = сегодняшняя дата у каждого URL
+today = datetime.now(timezone.utc).date().isoformat()
 xml = build_sitemap_xml(FakeDB())
 check("sitemap: все URL", xml.count("<loc>") == 3 + len(FAKE))
-check("sitemap: lastmod присутствует", "<lastmod>2026-01-15</lastmod>" in xml)
+check("sitemap: lastmod у всех URL", xml.count("<lastmod>") == 3 + len(FAKE))
+check("sitemap: lastmod = сегодня",
+      xml.count(f"<lastmod>{today}</lastmod>") == 3 + len(FAKE))
 
 # диаграмма: серверный inline-SVG из situations.json
 check("diagram: данные случая найдены", render_diagram_svg("OLL", 1, "OLL #01 — Sune") is not None)

@@ -38,6 +38,8 @@ check("GET unknown -> noindex", 'content="noindex, follow"' in r.text)
 
 r = client.get("/sitemap.xml")
 check("GET /sitemap.xml -> 200 xml", r.status_code == 200 and "<urlset" in r.text)
+check("GET /sitemap.xml -> lastmod у каждого URL",
+      r.text.count("<lastmod>") == r.text.count("<loc>") and "<lastmod>" in r.text)
 
 r = client.head("/sitemap.xml")
 check("HEAD /sitemap.xml -> 200 (не 404)",

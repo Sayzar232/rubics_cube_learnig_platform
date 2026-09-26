@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 
 from ..core.config import get_settings
 from ..models.algorithm import Algorithm, AlgorithmCategory
+from ..models.base import utcnow
 from .algorithm_service import algorithm_sort_key
 from .diagram_service import render_diagram_svg
 
@@ -490,25 +491,28 @@ def render_spa_html(path: str, db: Session | None) -> tuple[str, int]:
 
 
 def build_sitemap_xml(db: Session) -> str:
-    """Динамический sitemap.xml: главная, каталог, обучение и все алгоритмы с lastmod."""
-    urls: list[tuple[str, str | None]] = [
-        (f"{SITE_URL}/", None),
-        (f"{SITE_URL}/algorithms", None),
-        (f"{SITE_URL}/learning", None),
+    """Динамический sitemap.xml: главная, каталог, обучение и все алгоритмы.
+
+    ``lastmod`` проставляется каждому URL и равен дате формирования ответа:
+    страницы обновляются вместе с релизом, поэтому привязываться к отдельным
+    ``created_at`` записей не нужно (у статических страниц их вообще нет).
+    """
+    lastmod = utcnow().date().isoformat()
+    urls: list[str] = [
+        f"{SITE_URL}/",
+        f"{SITE_URL}/algorithms",
+        f"{SITE_URL}/learning",
     ]
     try:
         for algorithm in _load_algorithms(db):
-            lastmod = algorithm.created_at.strftime("%Y-%m-%d") if algorithm.created_at else None
-            urls.append((f"{SITE_URL}/algorithms/{algorithm.id}", lastmod))
+            urls.append(f"{SITE_URL}/algorithms/{algorithm.id}")
     except Exception:
         pass
 
-    entries = []
-    for loc, lastmod in urls:
-        entry = f"  <url>\n    <loc>{_esc(loc)}</loc>\n"
-        if lastmod:
-            entry += f"    <lastmod>{lastmod}</lastmod>\n"
-        entries.append(entry + "  </url>")
+    entries = [
+        f"  <url>\n    <loc>{_esc(loc)}</loc>\n    <lastmod>{lastmod}</lastmod>\n  </url>"
+        for loc in urls
+    ]
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
