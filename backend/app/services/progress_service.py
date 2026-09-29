@@ -25,16 +25,20 @@ def get_progress_statistics(db: Session, user: User) -> ProgressStatistics:
     totals = {category: count for category, count in total_rows}
     learned = {category: count for category, count in learned_rows}
 
+    f2l_total = totals.get(AlgorithmCategory.F2L, 0)
     oll_total = totals.get(AlgorithmCategory.OLL, 0)
     pll_total = totals.get(AlgorithmCategory.PLL, 0)
+    f2l_learned = learned.get(AlgorithmCategory.F2L, 0)
     oll_learned = learned.get(AlgorithmCategory.OLL, 0)
     pll_learned = learned.get(AlgorithmCategory.PLL, 0)
 
-    learned_total = oll_learned + pll_learned
-    total_algorithms = oll_total + pll_total
+    learned_total = f2l_learned + oll_learned + pll_learned
+    total_algorithms = f2l_total + oll_total + pll_total
     overall_percentage = round((learned_total / total_algorithms) * 100, 1) if total_algorithms else 0.0
 
     return ProgressStatistics(
+        f2l_learned=f2l_learned,
+        f2l_total=f2l_total,
         oll_learned=oll_learned,
         oll_total=oll_total,
         pll_learned=pll_learned,

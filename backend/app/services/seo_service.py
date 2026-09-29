@@ -103,7 +103,8 @@ def _algorithm_title_label(algorithm: Algorithm) -> str:
 
 
 def _category_label(category: AlgorithmCategory) -> str:
-    return "OLL" if category == AlgorithmCategory.OLL else "PLL"
+    # getattr: у фейков в scripts/check_seo_routes.py категория может быть строкой.
+    return getattr(category, "value", str(category))
 
 
 def _catalog_content(algorithms: list[Algorithm]) -> str:
@@ -111,12 +112,16 @@ def _catalog_content(algorithms: list[Algorithm]) -> str:
         _STATIC_STYLES,
         '<div class="seo-page">',
         _breadcrumbs_trail([("Главная", "/"), ("Каталог алгоритмов", "")]),
-        "<h1>Каталог алгоритмов CFOP: все 57 OLL и 21 PLL</h1>",
-        "<p>Полный набор алгоритмов последнего слоя для скоростной сборки кубика Рубика: "
-        "57 случаев OLL (ориентация последнего слоя) и 21 случай PLL (перестановка последнего слоя). "
+        "<h1>Каталог алгоритмов CFOP: 41 случай F2L, все 57 OLL и 21 PLL</h1>",
+        "<p>Полный набор алгоритмов метода CFOP для скоростной сборки кубика Рубика: "
+        "41 случай F2L (вставка пар «угол–ребро»), 57 случаев OLL (ориентация последнего слоя) "
+        "и 21 случай PLL (перестановка последнего слоя). "
         "Для каждого алгоритма — схема, формула и видеоурок.</p>",
     ]
     for category, heading, intro in (
+        (AlgorithmCategory.F2L, "F2L — вставка пар «угол–ребро» (41 алгоритм)",
+         "Случаи F2L вставляют пары углов и рёбер первых двух слоев в свои слоты — этап после креста, "
+         "от которого зависит большая часть результата."),
         (AlgorithmCategory.OLL, "OLL — ориентация последнего слоя (57 алгоритмов)",
          "Случаи OLL делают все жёлтые наклейки верхней грани ориентированными за один этап."),
         (AlgorithmCategory.PLL, "PLL — перестановка последнего слоя (21 алгоритм)",
@@ -140,9 +145,16 @@ def _catalog_content(algorithms: list[Algorithm]) -> str:
 
 def _algorithm_content(algorithm: Algorithm, algorithms: list[Algorithm]) -> str:
     category_label = _category_label(algorithm.category)
-    total = "57" if category_label == "OLL" else "21"
-    stage = "ориентации" if category_label == "OLL" else "перестановки"
     label = _algorithm_title_label(algorithm)
+    if category_label == "F2L":
+        stage_sentence = (
+            "Один из 41 стандартного случая F2L — вставки пары «угол–ребро» "
+            "в методе CFOP."
+        )
+    else:
+        total = "57" if category_label == "OLL" else "21"
+        stage = "ориентации" if category_label == "OLL" else "перестановки"
+        stage_sentence = f"Один из {total} алгоритмов {stage} последнего слоя в методе CFOP."
     diagram = render_diagram_svg(category_label, algorithm.algorithm_number, label)
     moves = len(algorithm.formula.split())
 
@@ -167,8 +179,7 @@ def _algorithm_content(algorithm: Algorithm, algorithms: list[Algorithm]) -> str
             (f"{category_label} #{algorithm.algorithm_number:02d}", ""),
         ]),
         f"<h1>{_esc(label)}</h1>",
-        f"<p>Группа: <b>{_esc(algorithm.group)}</b>. Один из {total} алгоритмов "
-        f"{stage} последнего слоя в методе CFOP.</p>",
+        f"<p>Группа: <b>{_esc(algorithm.group)}</b>. {stage_sentence}</p>",
         f'<p class="seo-formula">Формула: <code>{_esc(algorithm.formula)}</code></p>',
         f"<p>В формуле {moves} ходов в стандартной нотации. Учите алгоритм связками: "
         "разбейте формулу на 2–3 части, повторите каждую до автоматизма, "
@@ -177,10 +188,16 @@ def _algorithm_content(algorithm: Algorithm, algorithms: list[Algorithm]) -> str
     if diagram:
         # Диаграмма отдаётся inline-SVG из situations.json: файлы
         # /assets/algorithms/*.svg не коммитятся и в проде отдавали 404.
+        if category_label == "F2L":
+            caption = f"Схема случая {_esc(label)}: изометрия кубика, наклейки пары «угол–ребро»."
+        else:
+            caption = (
+                f"Схема случая {_esc(label)}: вид сверху, жёлтые наклейки — "
+                "ориентированный последний слой."
+            )
         parts.append(
             f'<figure class="seo-diagram">{diagram}'
-            f"<figcaption>Схема случая {_esc(label)}: вид сверху, жёлтые наклейки — "
-            "ориентированный последний слой.</figcaption></figure>"
+            f"<figcaption>{caption}</figcaption></figure>"
         )
     if siblings:
         sibling_links = ", ".join(
@@ -211,9 +228,9 @@ def _learning_content() -> str:
         '<div class="seo-page">',
         _breadcrumbs_trail([("Главная", "/"), ("Режим обучения", "")]),
         "<h1>Режим обучения CFOP</h1>",
-        "<p>Тренажёр последовательно показывает алгоритмы OLL и PLL, которые вы ещё не выучили: "
+        "<p>Тренажёр последовательно показывает алгоритмы F2L, OLL и PLL, которые вы ещё не выучили: "
         "диаграмма, формула и видеоурок для каждого случая. Отмечайте алгоритмы как выученные, "
-        "копите дневной стрик и следите за прогрессом — все 78 алгоритмов бесплатны.</p>",
+        "копите дневной стрик и следите за прогрессом — все 119 алгоритмов бесплатны.</p>",
         '<p><a href="/algorithms">Открыть каталог алгоритмов</a></p>',
         "</div>",
     ])
@@ -276,7 +293,7 @@ def _breadcrumb_node(items: list[tuple[str, str]]) -> dict:
 def _catalog_ld(algorithms: list[Algorithm]) -> str:
     item_list = {
         "@type": "ItemList",
-        "name": "Алгоритмы CFOP: OLL и PLL",
+        "name": "Алгоритмы CFOP: F2L, OLL и PLL",
         "numberOfItems": len(algorithms),
         "itemListElement": [
             {
@@ -292,7 +309,7 @@ def _catalog_ld(algorithms: list[Algorithm]) -> str:
         _website_node(),
         {
             "@type": "CollectionPage",
-            "name": "Каталог алгоритмов CFOP — все 57 OLL и 21 PLL",
+            "name": "Каталог алгоритмов CFOP — 41 случай F2L, все 57 OLL и 21 PLL",
             "url": f"{SITE_URL}/algorithms",
             "inLanguage": "ru",
             "mainEntity": item_list,
@@ -402,7 +419,9 @@ def render_spa_html(path: str, db: Session | None) -> tuple[str, int]:
     ``path`` — путь без домена, например ``/algorithms/3``.
     ``db`` может быть ``None``, если база недоступна (деградация без краша).
     """
-    route = "/" + path.strip("/")
+    # На Windows Starlette StaticFiles отдаёт путь с обратным слэшем
+    # ('algorithms\\1') — нормализуем, иначе детальные страницы дают 404 локально.
+    route = "/" + path.strip("/").replace("\\", "/")
     algorithms: list[Algorithm] = []
     if db is not None:
         try:
@@ -413,8 +432,8 @@ def render_spa_html(path: str, db: Session | None) -> tuple[str, int]:
     if route == "/algorithms":
         return _apply(
             _base_html(),
-            title="Каталог алгоритмов CFOP — все 57 OLL и 21 PLL с формулами · CubeLearn",
-            description="Полный каталог алгоритмов метода CFOP: 57 случаев OLL и 21 случай PLL "
+            title="Каталог алгоритмов CFOP — 41 F2L, все 57 OLL и 21 PLL с формулами · CubeLearn",
+            description="Полный каталог алгоритмов метода CFOP: 41 случай F2L, 57 случаев OLL и 21 случай PLL "
                         "с формулами, схемами и видеоуроками. Бесплатно, на русском языке.",
             canonical_path="/algorithms",
             content=_catalog_content(algorithms),
@@ -446,7 +465,7 @@ def render_spa_html(path: str, db: Session | None) -> tuple[str, int]:
         return _apply(
             _base_html(),
             title="Режим обучения CFOP — учите алгоритмы по одному · CubeLearn",
-            description="Тренажёр подбирает следующий алгоритм OLL или PLL, показывает диаграмму, "
+            description="Тренажёр подбирает следующий алгоритм F2L, OLL или PLL, показывает диаграмму, "
                         "формулу и видеоурок. Отмечайте прогресс и копите стрик — бесплатно.",
             canonical_path="/learning",
             content=_learning_content(),
@@ -469,7 +488,7 @@ def render_spa_html(path: str, db: Session | None) -> tuple[str, int]:
         return _apply(
             _base_html(),
             title="Профиль и прогресс · CubeLearn",
-            description="Личный кабинет CubeLearn: прогресс по OLL и PLL, достижения и статистика.",
+            description="Личный кабинет CubeLearn: прогресс по F2L, OLL и PLL, достижения и статистика.",
             canonical_path="/profile",
             content=_service_content("Профиль и прогресс", "Здесь отображается ваш прогресс изучения алгоритмов."),
             ld_json=None,

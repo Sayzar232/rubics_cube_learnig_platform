@@ -10,6 +10,7 @@ from .base import Base, CreatedAtMixin
 
 
 class AlgorithmCategory(str, Enum):
+    F2L = "F2L"
     OLL = "OLL"
     PLL = "PLL"
 

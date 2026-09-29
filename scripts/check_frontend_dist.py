@@ -118,7 +118,20 @@ def check_dist_integrity() -> None:
         except ValueError as exc:
             check("dist/data/situations.json валиден", False, str(exc))
         else:
-            check("dist/data/situations.json: 78 случаев", len(data) == 78, str(len(data)))
+            check("dist/data/situations.json: 119 случаев", len(data) == 119, str(len(data)))
+
+    f2l_geometry = DIST / "data" / "f2l-diagram.json"
+    check("dist/data/f2l-diagram.json существует (изометрия F2L для серверного рендера)",
+          f2l_geometry.is_file())
+    if f2l_geometry.is_file():
+        try:
+            geometry = json.loads(f2l_geometry.read_text(encoding="utf-8"))
+        except ValueError as exc:
+            check("dist/data/f2l-diagram.json валиден", False, str(exc))
+        else:
+            check("dist/data/f2l-diagram.json: 27 наклеек",
+                  len(geometry.get("stickers", [])) == 27,
+                  str(len(geometry.get("stickers", []))))
 
     robots = DIST / "robots.txt"
     check("dist/robots.txt содержит Disallow: /api/",

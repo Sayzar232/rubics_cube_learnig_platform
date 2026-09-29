@@ -22,9 +22,10 @@ function injectLanding() {
 }
 
 /**
- * Кладёт данные диаграмм в сборку: dist/data/situations.json.
- * Бэкенд рендерит те же SVG на сервере (backend/app/services/diagram_service.py),
- * а в Docker-образ попадает только frontend/dist, без frontend/src.
+ * Кладёт данные диаграмм в сборку: dist/data/situations.json и
+ * dist/data/f2l-diagram.json. Бэкенд рендерит те же SVG на сервере
+ * (backend/app/services/diagram_service.py), а в Docker-образ попадает только
+ * frontend/dist, без frontend/src.
  */
 function emitSituations() {
   return {
@@ -32,6 +33,8 @@ function emitSituations() {
     generateBundle() {
       const source = readFileSync(join(__dirname, 'src', 'situations.json'), 'utf8').replace(/^\uFEFF/, '')
       this.emitFile({ type: 'asset', fileName: 'data/situations.json', source })
+      const geometry = readFileSync(join(__dirname, 'src', 'f2l-diagram.json'), 'utf8').replace(/^\uFEFF/, '')
+      this.emitFile({ type: 'asset', fileName: 'data/f2l-diagram.json', source: geometry })
     },
   }
 }

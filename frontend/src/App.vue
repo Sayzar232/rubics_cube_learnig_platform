@@ -21,7 +21,7 @@ const resendNotice = ref('')
 const showResendHint = ref(false)        // подсказка переотправки при логине с 403
 const verificationState = ref('idle')    // idle | verifying | success | error (страница #/verify)
 const verificationMessage = ref('')
-const filter = ref('OLL')
+const filter = ref('F2L')
 const search = ref('')
 const showPassword = ref(false)
 const auth = ref({ username: '', email: '', password: '' })
@@ -34,12 +34,12 @@ const SITE_URL = (import.meta.env.VITE_SITE_URL || 'https://cubelearn.site').rep
 const PAGE_META = {
   landing: {
     title: 'CubeLearn — обучение скоростной сборки кубика Рубика · Метод CFOP',
-    description: 'Онлайн-платформа для изучения скоростной сборки кубика Рубика методом CFOP: 57 алгоритмов OLL и 21 PLL с диаграммами, видеоуроками и отслеживанием прогресса.',
+    description: 'Онлайн-платформа для изучения скоростной сборки кубика Рубика методом CFOP: 41 случай F2L, 57 алгоритмов OLL и 21 PLL с диаграммами, видеоуроками и отслеживанием прогресса.',
     path: '/',
   },
   algorithms: {
-    title: 'Каталог алгоритмов CFOP — все 57 OLL и 21 PLL с формулами · CubeLearn',
-    description: 'Полный каталог алгоритмов метода CFOP: 57 случаев OLL и 21 случай PLL с формулами, схемами и видеоуроками. Бесплатно, на русском языке.',
+    title: 'Каталог алгоритмов CFOP — 41 F2L, все 57 OLL и 21 PLL с формулами · CubeLearn',
+    description: 'Полный каталог алгоритмов метода CFOP: 41 случай F2L, 57 случаев OLL и 21 случай PLL с формулами, схемами и видеоуроками. Бесплатно, на русском языке.',
     path: '/algorithms',
   },
   // Страница алгоритма (detail) мету не получает: canonical/og:url ставит
@@ -47,7 +47,7 @@ const PAGE_META = {
   // по загруженному алгоритму (тот же формат, что в серверном HTML).
   learning: {
     title: 'Режим обучения CFOP — учите алгоритмы по одному · CubeLearn',
-    description: 'Тренажёр подбирает следующий алгоритм OLL или PLL, показывает диаграмму, формулу и видеоурок. Отмечайте прогресс и копите стрик — бесплатно.',
+    description: 'Тренажёр подбирает следующий алгоритм F2L, OLL или PLL, показывает диаграмму, формулу и видеоурок. Отмечайте прогресс и копите стрик — бесплатно.',
     path: '/learning',
   },
   auth: {
@@ -58,7 +58,7 @@ const PAGE_META = {
   },
   profile: {
     title: 'Профиль и прогресс · CubeLearn',
-    description: 'Личный кабинет CubeLearn: прогресс по OLL и PLL, достижения и статистика.',
+    description: 'Личный кабинет CubeLearn: прогресс по F2L, OLL и PLL, достижения и статистика.',
     path: '/profile',
     robots: 'noindex, follow',
   },
@@ -130,7 +130,7 @@ const navigate = (path) => {
 }
 const initials = computed(() => user.value?.username?.slice(0, 2).toUpperCase() || '?')
 const stats = computed(() => progress.value?.statistics || {
-  oll_learned: 0, oll_total: 57, pll_learned: 0, pll_total: 21, learned_total: 0, total_algorithms: 78, overall_percentage: 0,
+  f2l_learned: 0, f2l_total: 41, oll_learned: 0, oll_total: 57, pll_learned: 0, pll_total: 21, learned_total: 0, total_algorithms: 119, overall_percentage: 0,
 })
 const filteredAlgorithms = computed(() => algorithms.value.filter((algorithm) =>
   algorithm.category === filter.value && `${algorithm.name} ${algorithm.algorithm_number} ${algorithm.formula}`.toLowerCase().includes(search.value.toLowerCase()),
@@ -474,7 +474,7 @@ onMounted(async () => {
               <div><h1>Алгоритмы</h1><p>Выбери случай и изучай его в удобном темпе.</p></div>
               <button class="button" @click="openLearning">Продолжить обучение <AppIcon name="arrow-right" :size="15"/></button>
             </div>
-            <div class="catalog-controls"><div class="segmented"><button :class="{active: filter === 'OLL'}" @click="filter = 'OLL'">OLL</button><button :class="{active: filter === 'PLL'}" @click="filter = 'PLL'">PLL</button></div><input v-model="search" placeholder="Поиск алгоритма…" /></div>
+            <div class="catalog-controls"><div class="segmented"><button :class="{active: filter === 'F2L'}" @click="filter = 'F2L'">F2L</button><button :class="{active: filter === 'OLL'}" @click="filter = 'OLL'">OLL</button><button :class="{active: filter === 'PLL'}" @click="filter = 'PLL'">PLL</button></div><input v-model="search" placeholder="Поиск алгоритма…" /></div>
             <div v-if="loading" class="empty">Загрузка…</div>
             <div v-else class="algorithm-grid"><button v-for="algorithm in filteredAlgorithms" :key="algorithm.id" class="algorithm-card" :class="algorithm.category.toLowerCase()" @click="navigate(`/algorithms/${algorithm.id}`)"><span class="learned-mark" :class="{learned: algorithm.is_learned}"><AppIcon v-if="algorithm.is_learned" name="check" :size="12"/> {{ algorithm.is_learned ? 'Изучен' : `${algorithm.category} #${algorithm.algorithm_number}` }}</span><CubeDiagram :algorithm="algorithm"/><h3>{{ algorithm.name }}</h3><code>{{ algorithm.formula }}</code></button></div>
             <div v-if="!loading && !filteredAlgorithms.length" class="empty">Алгоритмы не найдены.</div>
@@ -511,7 +511,7 @@ onMounted(async () => {
                 <div class="profile-name">
                   <h1>{{ user?.username }}</h1>
                   <p>Спидкубер · с нами с {{ user?.created_at ? new Date(user.created_at).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }) : 'сегодня' }}</p>
-                  <div class="progress-pairs"><ProgressBar label="OLL" :done="stats.oll_learned" :total="stats.oll_total" color="yellow"/><ProgressBar label="PLL" :done="stats.pll_learned" :total="stats.pll_total" color="blue"/></div>
+                  <div class="progress-pairs"><ProgressBar label="F2L" :done="stats.f2l_learned" :total="stats.f2l_total" color="green"/><ProgressBar label="OLL" :done="stats.oll_learned" :total="stats.oll_total" color="yellow"/><ProgressBar label="PLL" :done="stats.pll_learned" :total="stats.pll_total" color="blue"/></div>
                 </div>
                 <div class="streak-card"><span>🔥</span><b>{{ streak }}</b><small>дней подряд</small></div>
               </div>
@@ -525,6 +525,7 @@ onMounted(async () => {
                   <div class="achievement" :class="{unlocked: stats.learned_total >= 1}">🔥 <span><b>Первый алгоритм</b><small>Изучи свой первый алгоритм</small><em v-if="stats.learned_total >= 1"><AppIcon name="check" :size="12"/> Получено</em></span></div>
                   <div class="achievement" :class="{unlocked: stats.learned_total >= 5}">⚡ <span><b>Быстрый старт</b><small>Изучи 5 алгоритмов</small><em v-if="stats.learned_total >= 5"><AppIcon name="check" :size="12"/> Получено</em></span></div>
                   <div class="achievement" :class="{unlocked: stats.learned_total >= 10}">📚 <span><b>Усердный ученик</b><small>Изучи 10 алгоритмов</small><em v-if="stats.learned_total >= 10"><AppIcon name="check" :size="12"/> Получено</em></span></div>
+                  <div class="achievement" :class="{unlocked: stats.f2l_total && stats.f2l_learned === stats.f2l_total}">🎯 <span><b>Мастер F2L</b><small>Изучи все F2L случаи</small><em v-if="stats.f2l_total && stats.f2l_learned === stats.f2l_total"><AppIcon name="check" :size="12"/> Получено</em></span></div>
                   <div class="achievement" :class="{unlocked: stats.oll_total && stats.oll_learned === stats.oll_total}">🏆 <span><b>Мастер OLL</b><small>Изучи все OLL случаи</small><em v-if="stats.oll_total && stats.oll_learned === stats.oll_total"><AppIcon name="check" :size="12"/> Получено</em></span></div>
                   <div class="achievement" :class="{unlocked: stats.pll_total && stats.pll_learned === stats.pll_total}">💎 <span><b>Чемпион PLL</b><small>Изучи все PLL случаи</small><em v-if="stats.pll_total && stats.pll_learned === stats.pll_total"><AppIcon name="check" :size="12"/> Получено</em></span></div>
                   <div class="achievement" :class="{unlocked: streak >= 30}">🌟 <span><b>30-дневный стрик</b><small>Занимайся 30 дней подряд</small><em v-if="streak >= 30"><AppIcon name="check" :size="12"/> Получено</em></span></div>
@@ -541,6 +542,9 @@ onMounted(async () => {
 
 <script>
 import situations from './situations.json'
+// Геометрия изометрической диаграммы F2L: тот же файл читают генератор
+// (create_f2l_svg.js) и серверный рендер (diagram_service.py).
+import f2lDiagram from './f2l-diagram.json'
 
 // Синхронизировано с _algorithm_title_label в backend/app/services/seo_service.py:
 // у generic-имён («OLL 21») не дублируем номер, а показываем группу.
@@ -562,6 +566,8 @@ const STICKER_COLORS = Object.freeze({
   R: '#D00000',
   B: '#2040D0',
   O: '#EE8800',
+  // Белые наклейки появляются только на диаграммах F2L (крест).
+  W: '#FFFFFF',
 })
 
 const ICONS = {
@@ -594,7 +600,33 @@ const AppIcon = {
   computed: { html() { return ICONS[this.name] || '' } },
   template: '<svg class="icon" :width="size" :height="size" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" v-html="html"></svg>',
 }
-const CubeDiagram = {
+// F2L хранится как три грани по 9 наклеек (F, R, U) — та же изометрия, что на
+// SpeedCubeDB, поэтому рисуем полигоны из f2l-diagram.json.
+const F2LDiagram = {
+  props: ['algorithm'],
+  computed: {
+    state() {
+      const number = String(this.algorithm.algorithm_number).padStart(2, '0')
+      return situations[`f2l-${number}`]
+    },
+    backgrounds() { return f2lDiagram.backgrounds },
+    viewBox() { return `0 0 ${f2lDiagram.width} ${f2lDiagram.height}` },
+    polygons() {
+      const state = this.state
+      if (!state) return []
+      return f2lDiagram.stickers.map((sticker) => ({
+        points: sticker.points,
+        fill: STICKER_COLORS[state[sticker.face]?.[sticker.cell]] || STICKER_COLORS.N,
+      }))
+    },
+  },
+  template: `<svg v-if="state" class="cube-diagram cube-diagram--iso" xmlns="http://www.w3.org/2000/svg" :viewBox="viewBox" role="img" :aria-label="algorithm.name">
+    <polygon v-for="(points, index) in backgrounds" :key="'bg' + index" :points="points"/>
+    <polygon v-for="(sticker, index) in polygons" :key="'sticker' + index" :points="sticker.points" :fill="sticker.fill"/>
+  </svg>`,
+}
+
+const TopCubeDiagram = {
   props: ['algorithm'],
   computed: {
     state() {
@@ -620,6 +652,14 @@ const CubeDiagram = {
   </svg>`,
 }
 
+// F2L рисуется изометрией, OLL/PLL — видом сверху.
+const CubeDiagram = {
+  components: { F2LDiagram, TopCubeDiagram },
+  props: ['algorithm'],
+  computed: { isF2L() { return this.algorithm.category === 'F2L' } },
+  template: '<F2LDiagram v-if="isF2L" :algorithm="algorithm"/><TopCubeDiagram v-else :algorithm="algorithm"/>',
+}
+
 const ProgressBar = {
   props: ['label', 'done', 'total', 'color'],
   computed: { percentage() { return this.total ? (this.done / this.total) * 100 : 0 } },
@@ -631,7 +671,13 @@ const AlgorithmDetail = {
   props: ['algorithm', 'stats', 'loading'],
   emits: ['complete', 'next', 'catalog'],
   computed: {
-    isOll() { return this.algorithm.category === 'OLL' },
+    // Рамка карточки диаграммы: у каждого этапа CFOP свой цвет (styles.css).
+    cardClass() { return this.algorithm.category.toLowerCase() },
+    viewCaption() {
+      return this.algorithm.category === 'F2L'
+        ? 'F2L · первые два слоя'
+        : `${this.algorithm.category} · вид сверху`
+    },
     titleLabel() { return algorithmTitleLabel(this.algorithm) },
     embedUrl() {
       const videoUrl = this.algorithm?.video_url
@@ -652,7 +698,7 @@ const AlgorithmDetail = {
       } catch { return null }
     },
   },
-  template: `<div class="detail"><div class="detail-heading"><div><button class="back-link" @click="$emit('catalog')"><AppIcon name="arrow-left" :size="14"/> К каталогу</button><h1>{{ titleLabel }}</h1><p>{{ stats.learned_total }} из {{ stats.total_algorithms }} изучено</p></div><button class="button button--dark" @click="$emit('next')">Следующий <AppIcon name="arrow-right" :size="15"/></button></div><div class="detail-progress"><i :style="{ width: stats.overall_percentage + '%' }"/></div><div class="detail-grid"><section><div class="diagram-card" :class="isOll ? 'oll' : 'pll'"><CubeDiagram :algorithm="algorithm"/><span>{{ algorithm.category }} · вид сверху</span></div><div class="formula-card"><small>АЛГОРИТМ</small><div><code v-for="(move, index) in algorithm.formula.split(' ')" :key="index">{{ move }}</code></div><button v-if="!algorithm.is_learned" class="master-button" :disabled="loading" @click="$emit('complete')"><AppIcon v-if="!loading" name="check" :size="16"/> {{ loading ? 'Сохраняем…' : 'Отметить как выученный' }}</button><p v-else class="mastered"><AppIcon name="check" :size="15"/> Алгоритм изучен</p></div></section><section><div class="video-card"><iframe v-if="embedUrl" class="video-player" :src="embedUrl" :title="algorithm.name + ' — видеоурок'" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"/><a v-else-if="algorithm.video_url" :href="algorithm.video_url" target="_blank" rel="noreferrer" class="video-link"><span class="video-glyph"><AppIcon name="play" :size="20"/></span><b>{{ algorithm.name }} — видеоурок</b><small>Открыть видео</small></a><div v-else class="video-placeholder"><span class="video-glyph"><AppIcon name="play" :size="20"/></span><b>{{ algorithm.name }} — видеоурок</b><small>Видео будет добавлено позже</small></div></div><div class="tips"><h2>💡 Советы по запоминанию</h2><p>🎯 Разбей алгоритм на блоки по 3–4 хода.</p><p>🔁 Повтори 10 раз медленно, затем ускоряйся.</p><p>👁️ Запомни визуальный паттерн случая.</p></div></section></div></div>`,
+  template: `<div class="detail"><div class="detail-heading"><div><button class="back-link" @click="$emit('catalog')"><AppIcon name="arrow-left" :size="14"/> К каталогу</button><h1>{{ titleLabel }}</h1><p>{{ stats.learned_total }} из {{ stats.total_algorithms }} изучено</p></div><button class="button button--dark" @click="$emit('next')">Следующий <AppIcon name="arrow-right" :size="15"/></button></div><div class="detail-progress"><i :style="{ width: stats.overall_percentage + '%' }"/></div><div class="detail-grid"><section><div class="diagram-card" :class="cardClass"><CubeDiagram :algorithm="algorithm"/><span>{{ viewCaption }}</span></div><div class="formula-card"><small>АЛГОРИТМ</small><div><code v-for="(move, index) in algorithm.formula.split(' ')" :key="index">{{ move }}</code></div><button v-if="!algorithm.is_learned" class="master-button" :disabled="loading" @click="$emit('complete')"><AppIcon v-if="!loading" name="check" :size="16"/> {{ loading ? 'Сохраняем…' : 'Отметить как выученный' }}</button><p v-else class="mastered"><AppIcon name="check" :size="15"/> Алгоритм изучен</p></div></section><section><div class="video-card"><iframe v-if="embedUrl" class="video-player" :src="embedUrl" :title="algorithm.name + ' — видеоурок'" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"/><a v-else-if="algorithm.video_url" :href="algorithm.video_url" target="_blank" rel="noreferrer" class="video-link"><span class="video-glyph"><AppIcon name="play" :size="20"/></span><b>{{ algorithm.name }} — видеоурок</b><small>Открыть видео</small></a><div v-else class="video-placeholder"><span class="video-glyph"><AppIcon name="play" :size="20"/></span><b>{{ algorithm.name }} — видеоурок</b><small>Видео будет добавлено позже</small></div></div><div class="tips"><h2>💡 Советы по запоминанию</h2><p>🎯 Разбей алгоритм на блоки по 3–4 хода.</p><p>🔁 Повтори 10 раз медленно, затем ускоряйся.</p><p>👁️ Запомни визуальный паттерн случая.</p></div></section></div></div>`,
 }
 
 export default { components: { AlgorithmDetail, CubeDiagram, ProgressBar, AppIcon } }

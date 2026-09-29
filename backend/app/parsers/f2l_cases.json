@@ -1,0 +1,330 @@
+[
+  {
+    "number": 1,
+    "name": "F2L 1",
+    "group": "Free Pairs",
+    "formula": "U R U' R'",
+    "video_url": "https://www.youtube.com/watch?v=GJAPWiFQlcY",
+    "image_url": "/assets/algorithms/f2l-01.svg"
+  },
+  {
+    "number": 2,
+    "name": "F2L 2",
+    "group": "Free Pairs",
+    "formula": "F R' F' R",
+    "video_url": "https://www.youtube.com/watch?v=xtiPZNtB428",
+    "image_url": "/assets/algorithms/f2l-02.svg"
+  },
+  {
+    "number": 3,
+    "name": "F2L 3",
+    "group": "Free Pairs",
+    "formula": "F' U' F",
+    "video_url": "https://www.youtube.com/watch?v=hjGuFNoMRW0",
+    "image_url": "/assets/algorithms/f2l-03.svg"
+  },
+  {
+    "number": 4,
+    "name": "F2L 4",
+    "group": "Free Pairs",
+    "formula": "R U R'",
+    "video_url": "https://www.youtube.com/watch?v=EmUXH3oqdh4",
+    "image_url": "/assets/algorithms/f2l-04.svg"
+  },
+  {
+    "number": 5,
+    "name": "F2L 5",
+    "group": "Disconnected Pairs",
+    "formula": "U' R U R' U2 R U' R'",
+    "video_url": "https://www.youtube.com/watch?v=RyT5JGz41gw",
+    "image_url": "/assets/algorithms/f2l-05.svg"
+  },
+  {
+    "number": 6,
+    "name": "F2L 6",
+    "group": "Disconnected Pairs",
+    "formula": "U' r U' R' U R U r'",
+    "video_url": "https://www.youtube.com/watch?v=i2CSmZJc7Ck",
+    "image_url": "/assets/algorithms/f2l-06.svg"
+  },
+  {
+    "number": 7,
+    "name": "F2L 7",
+    "group": "Disconnected Pairs",
+    "formula": "U' R U2 R' U' R U2 R'",
+    "video_url": "https://www.youtube.com/watch?v=irgZ-1XUFkY",
+    "image_url": "/assets/algorithms/f2l-07.svg"
+  },
+  {
+    "number": 8,
+    "name": "F2L 8",
+    "group": "Disconnected Pairs",
+    "formula": "r' U2 R2 U R2 U r",
+    "video_url": null,
+    "image_url": "/assets/algorithms/f2l-08.svg"
+  },
+  {
+    "number": 9,
+    "name": "F2L 9",
+    "group": "Disconnected Pairs",
+    "formula": "U' R U' R' U F' U' F",
+    "video_url": "https://www.youtube.com/watch?v=uKp6lYvTTNc",
+    "image_url": "/assets/algorithms/f2l-09.svg"
+  },
+  {
+    "number": 10,
+    "name": "F2L 10",
+    "group": "Disconnected Pairs",
+    "formula": "U' R U R' U R U R'",
+    "video_url": "https://www.youtube.com/watch?v=gyyYICRQg5c",
+    "image_url": "/assets/algorithms/f2l-10.svg"
+  },
+  {
+    "number": 11,
+    "name": "F2L 11",
+    "group": "Connected Pairs",
+    "formula": "U' R U2 R' U F' U' F",
+    "video_url": "https://www.youtube.com/watch?v=6yXzaZM3GEk",
+    "image_url": "/assets/algorithms/f2l-11.svg"
+  },
+  {
+    "number": 12,
+    "name": "F2L 12",
+    "group": "Connected Pairs",
+    "formula": "R U' R' U R U' R' U2 R U' R'",
+    "video_url": "https://www.youtube.com/watch?v=IW2wvQ2nC2o",
+    "image_url": "/assets/algorithms/f2l-12.svg"
+  },
+  {
+    "number": 13,
+    "name": "F2L 13",
+    "group": "Connected Pairs",
+    "formula": "y' U R' U R U' R' U' R",
+    "video_url": "https://www.youtube.com/watch?v=Sjo7aOX6f8o",
+    "image_url": "/assets/algorithms/f2l-13.svg"
+  },
+  {
+    "number": 14,
+    "name": "F2L 14",
+    "group": "Connected Pairs",
+    "formula": "U' R U' R' U R U R'",
+    "video_url": "https://www.youtube.com/watch?v=BwaDJAZaIpc",
+    "image_url": "/assets/algorithms/f2l-14.svg"
+  },
+  {
+    "number": 15,
+    "name": "F2L 15",
+    "group": "Connected Pairs",
+    "formula": "M U r U' r' U' M'",
+    "video_url": "https://www.youtube.com/watch?v=m0Uve1y-8tE",
+    "image_url": "/assets/algorithms/f2l-15.svg"
+  },
+  {
+    "number": 16,
+    "name": "F2L 16",
+    "group": "Connected Pairs",
+    "formula": "R U' R' U2 F' U' F",
+    "video_url": "https://www.youtube.com/watch?v=Rf5jEBMOUnc",
+    "image_url": "/assets/algorithms/f2l-16.svg"
+  },
+  {
+    "number": 17,
+    "name": "F2L 17",
+    "group": "Connected Pairs",
+    "formula": "R U2 R' U' R U R'",
+    "video_url": "https://www.youtube.com/watch?v=ncxTAoW7jow",
+    "image_url": "/assets/algorithms/f2l-17.svg"
+  },
+  {
+    "number": 18,
+    "name": "F2L 18",
+    "group": "Connected Pairs",
+    "formula": "y' R' U2 R U R' U' R",
+    "video_url": "https://www.youtube.com/watch?v=NotJBG5dR6w",
+    "image_url": "/assets/algorithms/f2l-18.svg"
+  },
+  {
+    "number": 19,
+    "name": "F2L 19",
+    "group": "Disconnected Pairs",
+    "formula": "U R U2 R' U R U' R'",
+    "video_url": "https://www.youtube.com/watch?v=EodPFBbDBME",
+    "image_url": "/assets/algorithms/f2l-19.svg"
+  },
+  {
+    "number": 20,
+    "name": "F2L 20",
+    "group": "Disconnected Pairs",
+    "formula": "y' U' R' U2 R U' R' U R",
+    "video_url": "https://www.youtube.com/watch?v=Am2sBaR-xVs",
+    "image_url": "/assets/algorithms/f2l-20.svg"
+  },
+  {
+    "number": 21,
+    "name": "F2L 21",
+    "group": "Disconnected Pairs",
+    "formula": "U2 R U R' U R U' R'",
+    "video_url": "https://www.youtube.com/watch?v=6M2nkaooAZk",
+    "image_url": "/assets/algorithms/f2l-21.svg"
+  },
+  {
+    "number": 22,
+    "name": "F2L 22",
+    "group": "Disconnected Pairs",
+    "formula": "r U' r' U2 r U r'",
+    "video_url": "https://www.youtube.com/watch?v=0IpO4zFYFoo",
+    "image_url": "/assets/algorithms/f2l-22.svg"
+  },
+  {
+    "number": 23,
+    "name": "F2L 23",
+    "group": "Connected Pairs",
+    "formula": "U R U' R' U' R U' R' U R U' R'",
+    "video_url": "https://www.youtube.com/watch?v=ZkLqXWiLFAg",
+    "image_url": "/assets/algorithms/f2l-23.svg"
+  },
+  {
+    "number": 24,
+    "name": "F2L 24",
+    "group": "Connected Pairs",
+    "formula": "F U R U' R' F' R U' R'",
+    "video_url": "https://www.youtube.com/watch?v=6HbnAQY-aVM",
+    "image_url": "/assets/algorithms/f2l-24.svg"
+  },
+  {
+    "number": 25,
+    "name": "F2L 25",
+    "group": "Corner In Slot",
+    "formula": "U' R' F R F' R U R'",
+    "video_url": "https://www.youtube.com/watch?v=S9257JxJwZk",
+    "image_url": "/assets/algorithms/f2l-25.svg"
+  },
+  {
+    "number": 26,
+    "name": "F2L 26",
+    "group": "Corner In Slot",
+    "formula": "U R U' R' F R' F' R",
+    "video_url": "https://www.youtube.com/watch?v=gr9h0xiXWjM",
+    "image_url": "/assets/algorithms/f2l-26.svg"
+  },
+  {
+    "number": 27,
+    "name": "F2L 27",
+    "group": "Corner In Slot",
+    "formula": "R U' R' U R U' R'",
+    "video_url": "https://www.youtube.com/watch?v=JBYRStpmDL8",
+    "image_url": "/assets/algorithms/f2l-27.svg"
+  },
+  {
+    "number": 28,
+    "name": "F2L 28",
+    "group": "Corner In Slot",
+    "formula": "R U R' U' F R' F' R",
+    "video_url": "https://www.youtube.com/watch?v=_VWlb_5SrsI",
+    "image_url": "/assets/algorithms/f2l-28.svg"
+  },
+  {
+    "number": 29,
+    "name": "F2L 29",
+    "group": "Corner In Slot",
+    "formula": "R' F R F' U R U' R'",
+    "video_url": "https://www.youtube.com/watch?v=EvCzppFMLCs",
+    "image_url": "/assets/algorithms/f2l-29.svg"
+  },
+  {
+    "number": 30,
+    "name": "F2L 30",
+    "group": "Corner In Slot",
+    "formula": "R U R' U' R U R'",
+    "video_url": "https://www.youtube.com/watch?v=MDy2EhrraRE",
+    "image_url": "/assets/algorithms/f2l-30.svg"
+  },
+  {
+    "number": 31,
+    "name": "F2L 31",
+    "group": "Edge In Slot",
+    "formula": "U' R' F R F' R U' R'",
+    "video_url": "https://www.youtube.com/watch?v=YflQOzAiK5s",
+    "image_url": "/assets/algorithms/f2l-31.svg"
+  },
+  {
+    "number": 32,
+    "name": "F2L 32",
+    "group": "Edge In Slot",
+    "formula": "U R U' R' U R U' R' U R U' R'",
+    "video_url": "https://www.youtube.com/watch?v=-xHjZYwAvWk",
+    "image_url": "/assets/algorithms/f2l-32.svg"
+  },
+  {
+    "number": 33,
+    "name": "F2L 33",
+    "group": "Edge In Slot",
+    "formula": "U' R U' R' U2 R U' R'",
+    "video_url": "https://www.youtube.com/watch?v=l49Oin4njnY",
+    "image_url": "/assets/algorithms/f2l-33.svg"
+  },
+  {
+    "number": 34,
+    "name": "F2L 34",
+    "group": "Edge In Slot",
+    "formula": "U R U R' U2 R U R'",
+    "video_url": "https://www.youtube.com/watch?v=1Zh-CRRe0E4",
+    "image_url": "/assets/algorithms/f2l-34.svg"
+  },
+  {
+    "number": 35,
+    "name": "F2L 35",
+    "group": "Edge In Slot",
+    "formula": "U' R U R' U F' U' F",
+    "video_url": "https://www.youtube.com/watch?v=ZYv09SLzoKw",
+    "image_url": "/assets/algorithms/f2l-35.svg"
+  },
+  {
+    "number": 36,
+    "name": "F2L 36",
+    "group": "Edge In Slot",
+    "formula": "U F' U' F U' R U R'",
+    "video_url": "https://www.youtube.com/watch?v=cfa5NlJaxZ8",
+    "image_url": "/assets/algorithms/f2l-36.svg"
+  },
+  {
+    "number": 37,
+    "name": "F2L 37",
+    "group": "Pieces In Slot",
+    "formula": "R2 U2 F R2 F' U2 R' U R'",
+    "video_url": "https://www.youtube.com/watch?v=Yo29cluMUNc",
+    "image_url": "/assets/algorithms/f2l-37.svg"
+  },
+  {
+    "number": 38,
+    "name": "F2L 38",
+    "group": "Pieces In Slot",
+    "formula": "R U' R' U' R U R' U2 R U' R'",
+    "video_url": "https://www.youtube.com/watch?v=ji7XpGGcrWs",
+    "image_url": "/assets/algorithms/f2l-38.svg"
+  },
+  {
+    "number": 39,
+    "name": "F2L 39",
+    "group": "Pieces In Slot",
+    "formula": "R U' R' U R U2 R' U R U' R'",
+    "video_url": "https://www.youtube.com/watch?v=vq-vBqWFuec",
+    "image_url": "/assets/algorithms/f2l-39.svg"
+  },
+  {
+    "number": 40,
+    "name": "F2L 40",
+    "group": "Pieces In Slot",
+    "formula": "r U' r' U2 r U r' R U R'",
+    "video_url": "https://www.youtube.com/watch?v=u_RyH_2Kqhw",
+    "image_url": "/assets/algorithms/f2l-40.svg"
+  },
+  {
+    "number": 41,
+    "name": "F2L 41",
+    "group": "Pieces In Slot",
+    "formula": "R U' R' r U' r' U2 r U r'",
+    "video_url": "https://www.youtube.com/watch?v=DpuAOiDiin4",
+    "image_url": "/assets/algorithms/f2l-41.svg"
+  }
+]

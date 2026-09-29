@@ -31,7 +31,7 @@ def _build_verification_bodies(username, verification_url, expire_hours):
   <h1 style="margin:0 0 16px;color:#1a1a2e;font-size:22px;">Подтвердите почту</h1>
   <p style="margin:0 0 20px;color:#333;font-size:15px;line-height:1.5;">
     Привет, <b>{display_name}</b>! Вы создали аккаунт на CubeLearn.<br/>
-    Нажмите кнопку ниже, чтобы подтвердить почту и начать учить OLL и PLL алгоритмы.
+    Нажмите кнопку ниже, чтобы подтвердить почту и начать учить F2L, OLL и PLL алгоритмы.
   </p>
   <p style="margin:0 0 20px;">
     <a href="{verification_url}"

@@ -15,6 +15,14 @@ from ..schemas.algorithm import AlgorithmRead
 # because SpeedCubeDB has used both singular/plural and slightly different
 # spellings for some subgroup names over time.
 GROUP_ORDER: dict[AlgorithmCategory, tuple[str, ...]] = {
+    AlgorithmCategory.F2L: (
+        "Free Pairs",
+        "Disconnected Pairs",
+        "Connected Pairs",
+        "Corner In Slot",
+        "Edge In Slot",
+        "Pieces In Slot",
+    ),
     AlgorithmCategory.OLL: (
         "OCLL",
         "T-shapes",
@@ -66,8 +74,9 @@ _GROUP_RANKS = {
 def algorithm_sort_key(algorithm: Algorithm) -> tuple[int, int, int]:
     """Sort algorithms by category, configured subgroup, then case number."""
     category_rank = {
-        AlgorithmCategory.OLL: 0,
-        AlgorithmCategory.PLL: 1,
+        AlgorithmCategory.F2L: 0,
+        AlgorithmCategory.OLL: 1,
+        AlgorithmCategory.PLL: 2,
     }.get(algorithm.category, 99)
     group_rank = _GROUP_RANKS.get(algorithm.category, {}).get(
         _normalized_group(algorithm.group),

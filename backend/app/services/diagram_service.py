@@ -30,6 +30,8 @@ STICKER_COLORS = {
     "R": "#D00000",
     "B": "#2040D0",
     "O": "#EE8800",
+    # Белые наклейки встречаются только на диаграммах F2L (кросс/пара).
+    "W": "#FFFFFF",
 }
 _EMPTY_COLOR = STICKER_COLORS["N"]
 
@@ -40,25 +42,48 @@ _SITUATION_PATHS = (
     Path(settings.frontend_dir).parent / "src" / "situations.json",
 )
 
+# Геометрия изометрической диаграммы F2L (f2l-diagram.json): три фона-полигона и
+# 27 наклеек с указанием грани и ячейки. Тот же файл читают create_f2l_svg.js и
+# Vue-компонент F2LDiagram (frontend/src/App.vue).
+_F2L_DIAGRAM_PATHS = (
+    Path(settings.frontend_dir) / "data" / "f2l-diagram.json",
+    Path(settings.frontend_dir).parent / "src" / "f2l-diagram.json",
+)
+
 _cache: tuple[Path, float, dict[str, Any]] | None = None
+_f2l_geometry_cache: tuple[Path, float, dict[str, Any]] | None = None
 
 
 def _load_situations() -> dict[str, Any]:
     """situations.json с кэшем по (путь, mtime). Пустой dict, если файла нет."""
-    global _cache
-    for path in _SITUATION_PATHS:
+    return _load_json_cached(_SITUATION_PATHS, "situations")
+
+
+def _load_f2l_geometry() -> dict[str, Any]:
+    """f2l-diagram.json с кэшем по (путь, mtime). Пустая геометрия, если файла нет."""
+    return _load_json_cached(_F2L_DIAGRAM_PATHS, "f2l_geometry")
+
+
+def _load_json_cached(paths: tuple[Path, ...], cache_name: str) -> dict[str, Any]:
+    """Читает первый существующий файл из paths, кэшируя его по (путь, mtime)."""
+    global _cache, _f2l_geometry_cache
+    cache = _f2l_geometry_cache if cache_name == "f2l_geometry" else _cache
+    for path in paths:
         try:
             mtime = path.stat().st_mtime
         except OSError:
             continue
-        if _cache is not None and _cache[0] == path and _cache[1] == mtime:
-            return _cache[2]
+        if cache is not None and cache[0] == path and cache[1] == mtime:
+            return cache[2]
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
         if isinstance(data, dict):
-            _cache = (path, mtime, data)
+            if cache_name == "f2l_geometry":
+                _f2l_geometry_cache = (path, mtime, data)
+            else:
+                _cache = (path, mtime, data)
             return data
     return {}
 
@@ -84,11 +109,52 @@ def _side_row(index: int) -> int:
     return 86 + index * 136
 
 
+def _render_f2l_svg(state: dict[str, Any], label: str) -> str | None:
+    """Изометрическая диаграмма F2L: три тёмных фона + 27 наклеек из f2l-diagram.json.
+
+    Ровно то же рисует Vue-компонент F2LDiagram (frontend/src/App.vue): заливки
+    берутся из STICKER_COLORS, фоны чёрные, viewBox 0 0 75 75.
+    """
+    geometry = _load_f2l_geometry()
+    backgrounds = geometry.get("backgrounds")
+    stickers = geometry.get("stickers")
+    if not isinstance(backgrounds, list) or not isinstance(stickers, list):
+        return None
+
+    caption = f"{label} — схема случая F2L"
+    width = int(geometry.get("width") or 75)
+    height = int(geometry.get("height") or 75)
+    parts = [
+        '<svg class="cube-diagram cube-diagram--iso" xmlns="http://www.w3.org/2000/svg" '
+        f'width="320" height="320" viewBox="0 0 {width} {height}" role="img" '
+        f'aria-label="{escape(caption, quote=True)}">',
+    ]
+    for points in backgrounds:
+        if isinstance(points, str):
+            parts.append(f'<polygon points="{escape(points)}" fill="#000"/>')
+    for sticker in stickers:
+        if not isinstance(sticker, dict):
+            continue
+        face = state.get(str(sticker.get("face")))
+        cell = sticker.get("cell")
+        value: Any = None
+        if isinstance(face, list) and isinstance(cell, int) and 0 <= cell < len(face):
+            value = face[cell]
+        parts.append(
+            f'<polygon points="{escape(str(sticker.get("points", "")))}" '
+            f'fill="{_sticker_color(value)}"/>'
+        )
+    parts.append("</svg>")
+    return "".join(parts)
+
+
 def render_diagram_svg(category_label: str, algorithm_number: int, label: str) -> str | None:
     """Inline-SVG диаграммы случая или None, если данных для случая нет."""
     state = _load_situations().get(situation_key(category_label, algorithm_number))
     if not isinstance(state, dict):
         return None
+    if category_label.lower() == "f2l":
+        return _render_f2l_svg(state, label)
     top = state.get("U")
     if not isinstance(top, list) or not top:
         return None

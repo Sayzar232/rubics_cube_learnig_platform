@@ -9,6 +9,8 @@ from .algorithm import AlgorithmRead
 
 
 class ProgressStatistics(BaseModel):
+    f2l_learned: int
+    f2l_total: int
     oll_learned: int
     
     oll_total: int

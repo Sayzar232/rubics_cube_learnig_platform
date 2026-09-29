@@ -117,6 +117,7 @@ code{font-family:'JetBrains Mono',ui-monospace,Consolas,monospace}
 .algorithm-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;width:100%}
 .algorithm-card{display:flex;flex-direction:column;width:100%;min-width:0;border:1px solid var(--line);background:#fff;text-align:left;border-radius:18px;padding:17px;transition:transform .25s,box-shadow .25s}
 .algorithm-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.algorithm-card.f2l{border-top:3px solid var(--green)}
 .algorithm-card.oll{border-top:3px solid var(--amber)}
 .algorithm-card.pll{border-top:3px solid var(--cyan)}
 .learned-mark{align-self:flex-start;display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:4px 10px;border-radius:999px;background:var(--bg-soft);border:1px solid var(--line);color:var(--muted)}
@@ -136,6 +137,7 @@ code{font-family:'JetBrains Mono',ui-monospace,Consolas,monospace}
 .detail-progress{margin-bottom:26px}
 .detail-progress i,.progress-track i{display:block;height:100%;background:var(--accent);border-radius:inherit;transition:width .5s}
 .progress-track i.blue{background:var(--cyan)}
+.progress-track i.green{background:var(--green)}
 .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
 .detail-grid>section{display:flex;flex-direction:column;gap:20px}
 .diagram-card,.formula-card,.tips,.video-card{border:1px solid var(--line);border-radius:20px;background:#fff}
@@ -145,6 +147,10 @@ code{font-family:'JetBrains Mono',ui-monospace,Consolas,monospace}
 .diagram-card .cube-diagram{max-width:100%;height:255px}
 .diagram-card span{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:999px;background:var(--amber-soft);color:#b45309;margin-top:16px}
 .diagram-card.pll span{background:var(--accent-soft);color:var(--accent)}
+.diagram-card.f2l{border-color:var(--green-line)}
+.diagram-card.f2l span{background:var(--green-soft);color:var(--green)}
+/* F2L рисуется изометрией с квадратным viewBox 75×75 (f2l-diagram.json). */
+.cube-diagram--iso{width:auto;height:255px;aspect-ratio:1}
 .formula-card{background:var(--dark);padding:23px;color:#fff;border:0}
 .formula-card small{color:#8b95a8;font-weight:800;letter-spacing:.12em}
 .formula-card>div{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
@@ -270,6 +276,7 @@ code{font-family:'JetBrains Mono',ui-monospace,Consolas,monospace}
   .diagram-card,.formula-card,.tips,.video-card{border-radius:16px}
   .diagram-card{padding:18px}
   .diagram-card .cube-diagram{width:100%;height:auto;aspect-ratio:637/563}
+  .diagram-card .cube-diagram.cube-diagram--iso{width:auto;height:auto;max-width:255px;aspect-ratio:1}
   .formula-card,.tips{padding:18px}
   .formula-card code{font-size:14px}
   .video-card,.video-player{min-height:0}

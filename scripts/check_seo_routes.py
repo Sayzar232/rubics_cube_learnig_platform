@@ -13,6 +13,9 @@ from app.services.diagram_service import render_diagram_svg  # noqa: E402
 from app.services.seo_service import render_spa_html, build_sitemap_xml  # noqa: E402
 
 FAKE = [
+    SimpleNamespace(id=100, category="F2L", algorithm_number=1, name="F2L 1", group="Free Pairs",
+                    formula="U R U' R'", image_url="/assets/algorithms/f2l-01.svg",
+                    created_at=datetime(2026, 1, 15)),
     SimpleNamespace(id=1, category="OLL", algorithm_number=1, name="Sune", group="Fish shapes",
                     formula="R U R' U R U2 R'", image_url="/assets/algorithms/oll-01.svg",
                     created_at=datetime(2026, 1, 15)),
@@ -88,8 +91,9 @@ check("detail generic: description без дубля группы", "(OCLL) (г�
 check("detail generic: соседние случаи", "Соседние случаи OLL" in html_text)
 check("detail generic: VideoObject отсутствует без video_url", "VideoObject" not in html_text)
 
-# VideoObject появляется при наличии video_url
-_fake_video = dict(FAKE[0].__dict__ | {"video_url": "https://www.youtube.com/watch?v=test"})
+# VideoObject появляется при наличии video_url (берём кейс с id=1 независимо от порядка в FAKE)
+_sune = next(fake for fake in FAKE if fake.id == 1)
+_fake_video = dict(_sune.__dict__ | {"video_url": "https://www.youtube.com/watch?v=test"})
 
 
 class FakeDBWithVideo:
@@ -128,6 +132,10 @@ check("trailing slash каталога: 200 + контент каталога",
 html_text, status = render_spa_html("algorithms/1/", FakeDB())
 check("trailing slash детальной: 200 + title алгоритма",
       status == 200 and "OLL #01 — Sune" in html_text)
+# Windows: StaticFiles отдаёт путь с обратным слэшем (algorithms\1)
+html_text, status = render_spa_html("algorithms\\1", FakeDB())
+check("windows path: 200 + title алгоритма",
+      status == 200 and "OLL #01 — Sune" in html_text)
 
 # sitemap: lastmod = сегодняшняя дата у каждого URL
 today = datetime.now(timezone.utc).date().isoformat()
@@ -140,6 +148,25 @@ check("sitemap: lastmod = сегодня",
 # диаграмма: серверный inline-SVG из situations.json
 check("diagram: данные случая найдены", render_diagram_svg("OLL", 1, "OLL #01 — Sune") is not None)
 check("diagram: неизвестный случай не роняет рендер", render_diagram_svg("OLL", 999, "OLL #999") is None)
+# F2L: изометрия (3 фона + 27 наклеек = 30 полигонов из f2l-diagram.json)
+_f2l_svg = render_diagram_svg("F2L", 1, "F2L #01") or ""
+check("diagram F2L: изометрия из 30 полигонов", _f2l_svg.count("<polygon") == 30,
+      str(_f2l_svg.count("<polygon")))
+check("diagram F2L: viewBox 75×75", 'viewBox="0 0 75 75"' in _f2l_svg)
+check("diagram F2L: неизвестный случай не роняет рендер", render_diagram_svg("F2L", 999, "F2L #999") is None)
+
+# /algorithms/100 — страница F2L: изометрическая диаграмма вместо вида сверху
+html_text, status = render_spa_html("/algorithms/100", FakeDB())
+check("f2l detail: 200", status == 200)
+check("f2l detail: title с группой",
+      "<title>F2L #01 (Free Pairs): формула, схема и видеоурок · CubeLearn</title>" in html_text)
+check("f2l detail: h1", "<h1>F2L #01 (Free Pairs)</h1>" in html_text)
+check("f2l detail: изометрия в разметке",
+      html_text.count('<svg class="cube-diagram cube-diagram--iso"') == 1
+      and html_text.count("<polygon") == 30)
+check("f2l detail: подпись про изометрию", "изометрия кубика" in html_text)
+check("f2l detail: «Один из 41»", "Один из 41" in html_text)
+check("f2l detail: нет ссылок на /assets/algorithms", "/assets/algorithms" not in html_text)
 
 
 class FakeDBWithoutSituation:
