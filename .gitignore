@@ -54,6 +54,7 @@ frontend/dist/assets/algorithms/
 .DS_Store
 Thumbs.db
 .agents
+.kilo
 
 # Local generated outputs
 response.html
